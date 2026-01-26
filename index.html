@@ -2,107 +2,91 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Well Thinking - Slide Builder</title>
+    <title>Well Thinking – PowerPoint Builder</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="brand">
-            <h1><i class="fa-solid fa-shapes"></i> Well Thinking</h1>
+
+<header>
+    <h1><i class="fa-solid fa-sliders"></i> Well Thinking</h1>
+</header>
+
+<main>
+
+    <aside id="toolbar">
+        <div class="tool-title">Projet</div>
+
+        <button class="tool-btn active">
+            <i class="fa-solid fa-layer-group"></i>
+            Slides
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-eye"></i>
+            Aperçu
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-plus"></i>
+            Ajouter une slide
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-palette"></i>
+            Thème
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-download"></i>
+            Exporter
+        </button>
+    </aside>
+
+    <section id="canvas-container">
+
+        <div id="canvas-actions">
+            <button><i class="fa-solid fa-plus"></i> Nouvelle slide</button>
+            <button><i class="fa-solid fa-copy"></i> Dupliquer</button>
+            <button><i class="fa-solid fa-pen"></i> Modifier</button>
         </div>
-        <button id="btn-generate">Générer le Python <i class="fa-solid fa-code"></i></button>
-    </header>
 
-    <main>
-        <section id="toolbar">
-            <div class="tool-category">Types de Slides</div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-solid fa-align-left" style="color:var(--primary-color)"></i> Texte Simple
+        <div class="slide" style="top:120px; left:120px;">
+            <div class="slide-header">
+                <span>Slide 1</span>
+                <i class="fa-solid fa-grip"></i>
             </div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-regular fa-circle-question" style="color:var(--primary-color)"></i> Question Quizz
+            <div class="slide-body">
+                <h3>Titre de la présentation</h3>
+                <p>Sous-titre ou description</p>
             </div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-solid fa-trophy" style="color:#f1c40f"></i> Fin / Victoire
+        </div>
+
+        <div class="slide" style="top:120px; left:420px;">
+            <div class="slide-header">
+                <span>Slide 2</span>
+                <i class="fa-solid fa-grip"></i>
             </div>
-        </section>
-
-        <section id="canvas-container">
-            
-            <div class="node" style="top: 50px; left: 50px;">
-                <div class="node-header">
-                    <span>#1 Introduction</span>
-                    <i class="fa-solid fa-play"></i>
-                </div>
-                <div class="node-body">
-                    "Bienvenue dans ce module de formation."
-                </div>
-                <div class="node-ports">
-                    <div class="port">
-                        <span>Suivant</span>
-                        <div class="socket"></div> </div>
-                </div>
+            <div class="slide-body">
+                <h3>Deuxième slide</h3>
+                <p>Contenu principal ici</p>
             </div>
+        </div>
 
-            <div class="node" style="top: 50px; left: 400px;">
-                <div class="node-header">
-                    <span>#2 Le Dilemme</span>
-                    <i class="fa-solid fa-question-circle"></i>
-                </div>
-                <div class="node-body">
-                    <strong>Q:</strong> Quelle est la bonne pratique ?
-                </div>
-                <div class="node-ports">
-                    <div class="port">
-                        <span style="color:var(--success-color)">A. Faire une sauvegarde</span>
-                        <div class="socket success" title="Connecter vers la suite"></div>
-                    </div>
-                    <div class="port">
-                        <span style="color:var(--danger-color)">B. Tout supprimer</span>
-                        <div class="socket failure" title="Connecter vers l'échec"></div>
-                    </div>
-                </div>
+        <div class="slide" style="top:120px; left:720px;">
+            <div class="slide-header">
+                <span>Slide 3</span>
+                <i class="fa-solid fa-grip"></i>
             </div>
-
-            <div class="node" style="top: 300px; left: 400px; border-color: var(--danger-color)">
-                <div class="node-header" style="background: var(--danger-color)">
-                    <span>#3 Échec</span>
-                    <i class="fa-solid fa-skull"></i>
-                </div>
-                <div class="node-body">
-                    "Mauvaise réponse. Recommencez."
-                </div>
+            <div class="slide-body">
+                <h3>Conclusion</h3>
+                <p>Message final</p>
             </div>
+        </div>
 
-        </section>
+    </section>
 
-        <section id="output-container">
-            <h3>Structure du Scénario</h3>
-            <pre><code id="python-output">
-scenario = {
-  "start_node": 1,
-  "nodes": [
-    {
-      "id": 1,
-      "text": "Bienvenue...",
-      "next": 2
-    },
-    {
-      "id": 2,
-      "type": "quiz",
-      "question": "Quelle pratique ?",
-      "choices": {
-         "A": {"target": 4, "valid": True},
-         "B": {"target": 3, "valid": False}
-      }
-    }
-  ]
-}
-            </code></pre>
-        </section>
-    </main>
+</main>
 
-    <script type="module" src="src/main.js"></script>
 </body>
 </html>
