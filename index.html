@@ -2,107 +2,241 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Well Thinking - Slide Builder</title>
+    <title>ADELIE LA BOSS – PowerPoint Builder</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="brand">
-            <h1><i class="fa-solid fa-shapes"></i> Well Thinking</h1>
+
+<header>
+    <h1><i class="fa-solid fa-sliders"></i> ADELIE LA BOSS</h1>
+</header>
+
+<main>
+
+    <!-- BARRE LATERALE -->
+    <aside id="toolbar">
+        <div class="tool-title">Projet</div>
+
+        <button class="tool-btn active">
+            <i class="fa-solid fa-layer-group"></i>
+            Slides
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-eye"></i>
+            Aperçu
+        </button>
+
+        <button class="tool-btn">
+            <i class="fa-solid fa-download"></i>
+            Exporter
+        </button>
+
+        <button class="tool-btn" id="btn-new-project">
+            <i class="fa-solid fa-plus"></i>
+            Nouveau projet
+        </button>
+
+    </aside>
+
+    <!-- ZONE CENTRALE -->
+    <section id="canvas-container">
+
+        <!-- ACTIONS -->
+        <div id="canvas-actions">
+            <button id="btn-add"><i class="fa-solid fa-plus"></i> Nouvelle slide</button>
+            <button id="btn-duplicate"><i class="fa-solid fa-copy"></i> Dupliquer</button>
+            <button id="btn-edit"><i class="fa-solid fa-pen"></i> Modifier</button>
+            <button id="btn-delete"><i class="fa-solid fa-trash"></i> Supprimer</button>
         </div>
-        <button id="btn-generate">Générer le Python <i class="fa-solid fa-code"></i></button>
-    </header>
 
-    <main>
-        <section id="toolbar">
-            <div class="tool-category">Types de Slides</div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-solid fa-align-left" style="color:var(--primary-color)"></i> Texte Simple
+        <!-- SLIDES -->
+        <div class="slide" style="top:120px; left:120px;">
+            <div class="slide-header">
+                <span>Slide </span>
+                <i class="fa-solid fa-grip"></i>
             </div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-regular fa-circle-question" style="color:var(--primary-color)"></i> Question Quizz
-            </div>
-            <div class="draggable-item" draggable="true">
-                <i class="fa-solid fa-trophy" style="color:#f1c40f"></i> Fin / Victoire
-            </div>
-        </section>
+        </div>
 
-        <section id="canvas-container">
-            
-            <div class="node" style="top: 50px; left: 50px;">
-                <div class="node-header">
-                    <span>#1 Introduction</span>
-                    <i class="fa-solid fa-play"></i>
-                </div>
-                <div class="node-body">
-                    "Bienvenue dans ce module de formation."
-                </div>
-                <div class="node-ports">
-                    <div class="port">
-                        <span>Suivant</span>
-                        <div class="socket"></div> </div>
-                </div>
+        <div class="slide" style="top:120px; left:420px;">
+            <div class="slide-header">
+                <span>Slide </span>
+                <i class="fa-solid fa-grip"></i>
             </div>
 
-            <div class="node" style="top: 50px; left: 400px;">
-                <div class="node-header">
-                    <span>#2 Le Dilemme</span>
-                    <i class="fa-solid fa-question-circle"></i>
-                </div>
-                <div class="node-body">
-                    <strong>Q:</strong> Quelle est la bonne pratique ?
-                </div>
-                <div class="node-ports">
-                    <div class="port">
-                        <span style="color:var(--success-color)">A. Faire une sauvegarde</span>
-                        <div class="socket success" title="Connecter vers la suite"></div>
-                    </div>
-                    <div class="port">
-                        <span style="color:var(--danger-color)">B. Tout supprimer</span>
-                        <div class="socket failure" title="Connecter vers l'échec"></div>
-                    </div>
-                </div>
+        </div>
+
+        <div class="slide" style="top:120px; left:720px;">
+            <div class="slide-header">
+                <span>Slide </span>
+                <i class="fa-solid fa-grip"></i>
             </div>
+        </div>
 
-            <div class="node" style="top: 300px; left: 400px; border-color: var(--danger-color)">
-                <div class="node-header" style="background: var(--danger-color)">
-                    <span>#3 Échec</span>
-                    <i class="fa-solid fa-skull"></i>
-                </div>
-                <div class="node-body">
-                    "Mauvaise réponse. Recommencez."
-                </div>
-            </div>
+    </section>
 
-        </section>
+</main>
 
-        <section id="output-container">
-            <h3>Structure du Scénario</h3>
-            <pre><code id="python-output">
-scenario = {
-  "start_node": 1,
-  "nodes": [
-    {
-      "id": 1,
-      "text": "Bienvenue...",
-      "next": 2
-    },
-    {
-      "id": 2,
-      "type": "quiz",
-      "question": "Quelle pratique ?",
-      "choices": {
-         "A": {"target": 4, "valid": True},
-         "B": {"target": 3, "valid": False}
-      }
-    }
-  ]
-}
-            </code></pre>
-        </section>
-    </main>
-
-    <script type="module" src="src/main.js"></script>
 </body>
 </html>
+
+<script>
+let slideCount = document.querySelectorAll(".slide").length;
+let selectedSlide = null;
+
+/* =========================
+   SELECTION DES SLIDES
+========================= */
+document.addEventListener("click", (e) => {
+    const slide = e.target.closest(".slide");
+
+    document.querySelectorAll(".slide").forEach(s => {
+        s.style.outline = "none";
+    });
+
+    if (slide) {
+        selectedSlide = slide;
+        slide.style.outline = "3px solid var(--primary)";
+    } else {
+        selectedSlide = null;
+    }
+});
+
+/* =========================
+   AJOUT SLIDE
+========================= */
+document.getElementById("btn-add").addEventListener("click", () => {
+    slideCount++;
+
+    const slide = document.createElement("div");
+    slide.className = "slide";
+    slide.style.top = "300px";
+    slide.style.left = "500spx";
+
+    slide.innerHTML = `
+        <div class="slide-header">
+            <span>Slide </span>
+            <i class="fa-solid fa-grip"></i>
+        </div>
+    `;
+
+    document.getElementById("canvas-container").appendChild(slide);
+});
+
+/* =========================
+   SUPPRESSION SLIDE
+========================= */
+document.getElementById("btn-delete").addEventListener("click", () => {
+    if (!selectedSlide) {
+        alert("Sélectionne une slide à supprimer 🙂");
+        return;
+    }
+
+    selectedSlide.remove();
+    selectedSlide = null;
+});
+
+// SUPPRESSION AVEC TOUCHE DELETE
+document.addEventListener("keydown", (e) => {
+    // Vérifie si une slide est sélectionnée
+    if (!selectedSlide) return;
+
+    // e.key peut être "Delete" ou "Backspace"
+    if (e.key === "Delete" || e.key === "Backspace") {
+        selectedSlide.remove();
+        selectedSlide = null;
+    }
+});
+/* =========================
+   DUPLIQUER LA SLIDE SELECTIONNÉE
+========================= */
+
+document.getElementById("btn-duplicate").addEventListener("click", () => {
+    if (!selectedSlide) {
+        alert("Sélectionne une slide à dupliquer 🙂");
+        return;
+    }
+
+    // Clone la slide
+    const clone = selectedSlide.cloneNode(true);
+
+    // Décaler légèrement la position pour qu'on voie le clone
+    const left = parseInt(selectedSlide.style.left || 0);
+    const top = parseInt(selectedSlide.style.top || 0);
+    clone.style.left = (left + 40) + "px";
+    clone.style.top = (top + 40) + "px";
+
+    // Ajouter le clone au canvas
+    document.getElementById("canvas-container").appendChild(clone);
+
+    // Mettre à jour la sélection pour le clone
+    document.querySelectorAll(".slide").forEach(s => s.style.outline = "none");
+    selectedSlide = clone;
+    clone.style.outline = "3px solid var(--primary)";
+});
+/* =========================
+   NOUVEAU PROJET
+========================= */
+document.getElementById("btn-new-project").addEventListener("click", () => {
+    const canvas = document.getElementById("canvas-container");
+
+    // Supprime toutes les slides
+    canvas.querySelectorAll(".slide").forEach(slide => slide.remove());
+
+    // Réinitialise la sélection
+    selectedSlide = null;
+
+    // Ajoute une slide initiale vide
+    const initialSlide = document.createElement("div");
+    initialSlide.className = "slide";
+    initialSlide.style.top = "120px";
+    initialSlide.style.left = "120px";
+    initialSlide.innerHTML = `
+        <div class="slide-header">
+            <span></span>
+            <i class="fa-solid fa-grip"></i>
+        </div>
+    `;
+    canvas.appendChild(initialSlide);
+});
+/* =========================
+   DRAG & DROP SLIDES
+========================= */
+let isDragging = false;
+let offsetX, offsetY;
+
+document.addEventListener("mousedown", (e) => {
+    const header = e.target.closest(".slide-header");
+    if (!header) return;
+
+    selectedSlide = header.parentElement;
+    isDragging = true;
+
+    const rect = selectedSlide.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    selectedSlide.style.zIndex = 1000;
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (!isDragging || !selectedSlide) return;
+
+    const canvas = document.getElementById("canvas-container");
+    const canvasRect = canvas.getBoundingClientRect();
+
+    selectedSlide.style.left = (e.clientX - canvasRect.left - offsetX) + "px";
+    selectedSlide.style.top = (e.clientY - canvasRect.top - offsetY) + "px";
+});
+
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+    if (selectedSlide) selectedSlide.style.zIndex = "";
+});
+
+
+
+
+</script>
