@@ -2,11 +2,17 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+<<<<<<< Updated upstream
     <title>Well Thinking - Generator</title>
+=======
+    <title>Well Thinking - Slide Builder</title>
+>>>>>>> Stashed changes
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header>
+<<<<<<< Updated upstream
         <h1>Well Thinking : Scenario Builder</h1>
         <button id="btn-generate">🚀 Générer le Code Python</button>
     </header>
@@ -16,12 +22,105 @@
             <div id="graph-editor">
                 <p>Zone du Graphe (Simulée pour la démo)</p>
                 <div class="node" id="node-1">Début: "Bonjour voyageur !"</div>
+=======
+        <div class="brand">
+            <h1><i class="fa-solid fa-shapes"></i> Well Thinking</h1>
+        </div>
+        <button id="btn-generate">Générer le Python <i class="fa-solid fa-code"></i></button>
+    </header>
+
+    <main>
+        <section id="toolbar">
+            <div class="tool-category">Types de Slides</div>
+            <div class="draggable-item" draggable="true">
+                <i class="fa-solid fa-align-left" style="color:var(--primary-color)"></i> Texte Simple
+            </div>
+            <div class="draggable-item" draggable="true">
+                <i class="fa-regular fa-circle-question" style="color:var(--primary-color)"></i> Question Quizz
+            </div>
+            <div class="draggable-item" draggable="true">
+                <i class="fa-solid fa-trophy" style="color:#f1c40f"></i> Fin / Victoire
+>>>>>>> Stashed changes
             </div>
         </section>
 
+        <section id="canvas-container">
+            
+            <div class="node" style="top: 50px; left: 50px;">
+                <div class="node-header">
+                    <span>#1 Introduction</span>
+                    <i class="fa-solid fa-play"></i>
+                </div>
+                <div class="node-body">
+                    "Bienvenue dans ce module de formation."
+                </div>
+                <div class="node-ports">
+                    <div class="port">
+                        <span>Suivant</span>
+                        <div class="socket"></div> </div>
+                </div>
+            </div>
+
+            <div class="node" style="top: 50px; left: 400px;">
+                <div class="node-header">
+                    <span>#2 Le Dilemme</span>
+                    <i class="fa-solid fa-question-circle"></i>
+                </div>
+                <div class="node-body">
+                    <strong>Q:</strong> Quelle est la bonne pratique ?
+                </div>
+                <div class="node-ports">
+                    <div class="port">
+                        <span style="color:var(--success-color)">A. Faire une sauvegarde</span>
+                        <div class="socket success" title="Connecter vers la suite"></div>
+                    </div>
+                    <div class="port">
+                        <span style="color:var(--danger-color)">B. Tout supprimer</span>
+                        <div class="socket failure" title="Connecter vers l'échec"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="node" style="top: 300px; left: 400px; border-color: var(--danger-color)">
+                <div class="node-header" style="background: var(--danger-color)">
+                    <span>#3 Échec</span>
+                    <i class="fa-solid fa-skull"></i>
+                </div>
+                <div class="node-body">
+                    "Mauvaise réponse. Recommencez."
+                </div>
+            </div>
+
+        </section>
+
         <section id="output-container">
+<<<<<<< Updated upstream
             <h3>Code Python Généré :</h3>
             <pre><code id="python-output"># Le code apparaîtra ici...</code></pre>
+=======
+            <h3>Structure du Scénario</h3>
+            <pre><code id="python-output">
+scenario = {
+  "start_node": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "text": "Bienvenue...",
+      "next": 2
+    },
+    {
+      "id": 2,
+      "type": "quiz",
+      "question": "Quelle pratique ?",
+      "choices": {
+         "A": {"target": 4, "valid": True},
+         "B": {"target": 3, "valid": False}
+      }
+    }
+  ]
+}
+            </code></pre>
+>>>>>>> Stashed changes
         </section>
     </main>
 
