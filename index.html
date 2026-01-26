@@ -2,18 +2,18 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Well Thinking – PowerPoint Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADELIE LA BOSS – PowerPoint Builder</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
 <header>
-    <h1><i class="fa-solid fa-sliders"></i> Well Thinking</h1>
+    <h1><i class="fa-solid fa-sliders"></i> ADELIE LA BOSS</h1>
 </header>
 
 <main>
-
     <aside id="toolbar">
         <div class="tool-title">Projet</div>
 
@@ -22,71 +22,61 @@
             Slides
         </button>
 
-        <button class="tool-btn">
-            <i class="fa-solid fa-eye"></i>
-            Aperçu
-        </button>
-
-        <button class="tool-btn">
-            <i class="fa-solid fa-plus"></i>
-            Ajouter une slide
-        </button>
-
-        <button class="tool-btn">
-            <i class="fa-solid fa-palette"></i>
-            Thème
+        <button class="tool-btn" id="btn-preview">
+            <i class="fa-solid fa-play"></i>
+            Lancer l'aperçu
         </button>
 
         <button class="tool-btn">
             <i class="fa-solid fa-download"></i>
             Exporter
         </button>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+
+        <button class="tool-btn" id="btn-add-sidebar">
+            <i class="fa-solid fa-plus"></i>
+            Nouveau projet
+        </button>
     </aside>
 
     <section id="canvas-container">
-
         <div id="canvas-actions">
-            <button><i class="fa-solid fa-plus"></i> Nouvelle slide</button>
-            <button><i class="fa-solid fa-copy"></i> Dupliquer</button>
-            <button><i class="fa-solid fa-pen"></i> Modifier</button>
+            <button id="btn-add"><i class="fa-solid fa-plus"></i> Nouvelle</button>
+            <button id="btn-duplicate"><i class="fa-solid fa-copy"></i> Dupliquer</button>
+            <button id="btn-delete"><i class="fa-solid fa-trash"></i> Supprimer</button>
+            <span class="separator">|</span>
+            <button id="btn-clear-all" class="danger-btn"><i class="fa-solid fa-eraser"></i> Tout vider</button>
         </div>
 
         <div class="slide" style="top:120px; left:120px;">
             <div class="slide-header">
-                <span>Slide 1</span>
-                <i class="fa-solid fa-grip"></i>
+                <span contenteditable="true">Slide 1</span>
+                <i class="fa-solid fa-grip-lines handle"></i>
             </div>
-            <div class="slide-body">
+            <div class="slide-body" contenteditable="true">
                 <h3>Titre de la présentation</h3>
-                <p>Sous-titre ou description</p>
+                <p>Bienvenue ! Cliquez ici pour écrire...</p>
             </div>
         </div>
-
-        <div class="slide" style="top:120px; left:420px;">
-            <div class="slide-header">
-                <span>Slide 2</span>
-                <i class="fa-solid fa-grip"></i>
-            </div>
-            <div class="slide-body">
-                <h3>Deuxième slide</h3>
-                <p>Contenu principal ici</p>
-            </div>
-        </div>
-
-        <div class="slide" style="top:120px; left:720px;">
-            <div class="slide-header">
-                <span>Slide 3</span>
-                <i class="fa-solid fa-grip"></i>
-            </div>
-            <div class="slide-body">
-                <h3>Conclusion</h3>
-                <p>Message final</p>
-            </div>
-        </div>
-
     </section>
-
 </main>
 
+<div id="preview-overlay" class="hidden">
+    <button id="close-preview"><i class="fa-solid fa-xmark"></i> Quitter</button>
+    
+    <div id="preview-card">
+        <h2 id="p-title">Titre</h2>
+        <div id="p-body">Contenu</div>
+    </div>
+
+    <div class="preview-controls">
+        <button id="prev-slide"><i class="fa-solid fa-chevron-left"></i></button>
+        <span id="slide-indicator">1 / 5</span>
+        <button id="next-slide"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<script src="src/main.js"></script>
 </body>
 </html>
