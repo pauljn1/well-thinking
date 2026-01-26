@@ -1,4 +1,5 @@
 ﻿const state={slides:[],currentSlideIndex:0,selectedElement:null,isDragging:false,isResizing:false,isEditing:false,dragOffset:{x:0,y:0},resizeHandle:null,projectIndex:null};
+const history = { stack: [], index: -1, maxSize: 50 };
 const slideCanvas=document.getElementById('slideCanvas');
 const slidesList=document.getElementById('slidesList');
 const slideCounter=document.getElementById('slideCounter');
@@ -31,6 +32,8 @@ function loadProject() {
     renderCurrentSlide();
     updateSlideCounter();
     updateNavButtons();
+    // Initialiser l'historique avec l'état initial
+    saveToHistory();
 }
 
 // Sauvegarder le projet dans localStorage
@@ -46,10 +49,25 @@ function saveProject() {
 
 
 function setupEventListeners(){
-    document.getElementById('addTextBtn').addEventListener('click',addTextElement);
-    document.getElementById('addImageBtn').addEventListener('click',()=>imageModal.classList.add('active'));
-    document.getElementById('addShapeBtn').addEventListener('click',()=>shapeModal.classList.add('active'));
-    document.getElementById('addSlideBtn').addEventListener('click',addSlide);
+    // Boutons du panneau latéral droit
+    document.getElementById('addTextBtnSide').addEventListener('click',addTextElement);
+    document.getElementById('addImageBtnSide').addEventListener('click',()=>imageModal.classList.add('active'));
+    document.getElementById('addShapeBtnSide').addEventListener('click',()=>shapeModal.classList.add('active'));
+    document.getElementById('addNavLinkBtnSide').addEventListener('click',addNavLinkElement);
+    // Menu déroulant pour ajouter une slide
+    document.getElementById('addSlideBtn').addEventListener('click', toggleAddSlideDropdown);
+    document.querySelectorAll('#addSlideDropdown .dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            addSlideFromTemplate(item.dataset.template);
+            closeAddSlideDropdown();
+        });
+    });
+    // Fermer le dropdown si on clique ailleurs
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.add-slide-wrapper')) {
+            closeAddSlideDropdown();
+        }
+    });
     document.getElementById('prevSlide').addEventListener('click',previousSlide);
     document.getElementById('nextSlide').addEventListener('click',nextSlide);
     document.getElementById('canvasArrowLeft').addEventListener('click',previousSlide);
@@ -64,6 +82,9 @@ function setupEventListeners(){
     document.getElementById('boldBtn').addEventListener('click',()=>toggleFormat('bold'));
     document.getElementById('italicBtn').addEventListener('click',()=>toggleFormat('italic'));
     document.getElementById('underlineBtn').addEventListener('click',()=>toggleFormat('underline'));
+    document.getElementById('alignLeftBtn').addEventListener('click',()=>setTextAlign('left'));
+    document.getElementById('alignCenterBtn').addEventListener('click',()=>setTextAlign('center'));
+    document.getElementById('alignRightBtn').addEventListener('click',()=>setTextAlign('right'));
     document.getElementById('textColorPicker').addEventListener('input',e=>setTextColor(e.target.value));
     document.getElementById('slideBgColor').addEventListener('input',e=>setSlideBgColor(e.target.value));
     document.getElementById('fontSelect').addEventListener('change',e=>setFont(e.target.value));
@@ -83,6 +104,9 @@ function setupEventListeners(){
     document.getElementById('elemWidth').addEventListener('input',updateElementSize);
     document.getElementById('elemHeight').addEventListener('input',updateElementSize);
     document.getElementById('elemTextContent').addEventListener('input',updateElementTextContent);
+    document.getElementById('targetSlideSelect').addEventListener('change',updateNavLinkTarget);
+    document.getElementById('navLinkLabel').addEventListener('input',updateNavLinkLabel);
+    document.getElementById('navLinkColor').addEventListener('input',updateNavLinkColor);
     document.getElementById('deleteElement').addEventListener('click',deleteSelectedElement);
     document.getElementById('presentBtn').addEventListener('click',startPresentation);
     document.getElementById('presExit').addEventListener('click',exitPresentation);
@@ -95,6 +119,271 @@ function setupEventListeners(){
     document.addEventListener('mouseup',handleMouseUp);
     shapeModal.addEventListener('click',e=>{if(e.target===shapeModal)shapeModal.classList.remove('active')});
     imageModal.addEventListener('click',e=>{if(e.target===imageModal)imageModal.classList.remove('active')});
+    
+    // Raccourcis clavier globaux
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+}
+
+// Gestion des raccourcis clavier
+function handleKeyboardShortcuts(e) {
+    // Ctrl+Z : Annuler
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    }
+    // Ctrl+Y ou Ctrl+Shift+Z : Rétablir
+    if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+        e.preventDefault();
+        redo();
+    }
+}
+
+// Sauvegarder l'état actuel dans l'historique
+function saveToHistory() {
+    // Supprimer les états futurs si on a fait des undo
+    if (history.index < history.stack.length - 1) {
+        history.stack = history.stack.slice(0, history.index + 1);
+    }
+    
+    // Créer une copie profonde de l'état actuel
+    const snapshot = {
+        slides: JSON.parse(JSON.stringify(state.slides)),
+        currentSlideIndex: state.currentSlideIndex
+    };
+    
+    history.stack.push(snapshot);
+    
+    // Limiter la taille de l'historique
+    if (history.stack.length > history.maxSize) {
+        history.stack.shift();
+    } else {
+        history.index++;
+    }
+}
+
+// Annuler la dernière action
+function undo() {
+    if (history.index > 0) {
+        history.index--;
+        restoreFromHistory();
+    }
+}
+
+// Rétablir l'action annulée
+function redo() {
+    if (history.index < history.stack.length - 1) {
+        history.index++;
+        restoreFromHistory();
+    }
+}
+
+// Restaurer l'état depuis l'historique
+function restoreFromHistory() {
+    const snapshot = history.stack[history.index];
+    if (snapshot) {
+        state.slides = JSON.parse(JSON.stringify(snapshot.slides));
+        state.currentSlideIndex = snapshot.currentSlideIndex;
+        state.selectedElement = null;
+        updateSlidesList();
+        renderCurrentSlide();
+        updateSlideCounter();
+        updateNavButtons();
+        saveProject();
+    }
+}
+
+function toggleAddSlideDropdown(e){
+    e.stopPropagation();
+    const dropdown = document.getElementById('addSlideDropdown');
+    dropdown.classList.toggle('active');
+}
+
+function closeAddSlideDropdown(){
+    const dropdown = document.getElementById('addSlideDropdown');
+    dropdown.classList.remove('active');
+}
+
+function addSlideFromTemplate(template){
+    saveToHistory();
+    const slide = {id: Date.now(), backgroundColor: '#ffffff', elements: [], treeX: null, treeY: null};
+    
+    switch(template){
+        case 'blank':
+            // Slide vierge, pas d'éléments
+            break;
+        case 'title':
+            slide.elements.push({
+                id: Date.now(),
+                type: 'text',
+                x: 80,
+                y: 200,
+                width: 800,
+                height: 80,
+                content: 'Titre de la présentation',
+                fontFamily: 'Inter',
+                fontSize: 48,
+                color: '#1e1e1e',
+                bold: true,
+                italic: false,
+                underline: false
+            });
+            break;
+        case 'titleText':
+            slide.elements.push({
+                id: Date.now(),
+                type: 'text',
+                x: 80,
+                y: 60,
+                width: 800,
+                height: 60,
+                content: 'Titre de la slide',
+                fontFamily: 'Inter',
+                fontSize: 40,
+                color: '#1e1e1e',
+                bold: true,
+                italic: false,
+                underline: false
+            });
+            slide.elements.push({
+                id: Date.now() + 1,
+                type: 'text',
+                x: 80,
+                y: 150,
+                width: 800,
+                height: 300,
+                content: 'Ajoutez votre contenu ici...',
+                fontFamily: 'Inter',
+                fontSize: 20,
+                color: '#333333',
+                bold: false,
+                italic: false,
+                underline: false
+            });
+            break;
+        case 'titleImage':
+            slide.elements.push({
+                id: Date.now(),
+                type: 'text',
+                x: 80,
+                y: 40,
+                width: 800,
+                height: 50,
+                content: 'Titre de la slide',
+                fontFamily: 'Inter',
+                fontSize: 36,
+                color: '#1e1e1e',
+                bold: true,
+                italic: false,
+                underline: false
+            });
+            slide.elements.push({
+                id: Date.now() + 1,
+                type: 'shape',
+                shape: 'rectangle',
+                x: 230,
+                y: 120,
+                width: 500,
+                height: 350,
+                color: '#e0e0e0'
+            });
+            break;
+        case 'twoColumns':
+            slide.elements.push({
+                id: Date.now(),
+                type: 'text',
+                x: 80,
+                y: 40,
+                width: 800,
+                height: 50,
+                content: 'Titre de la slide',
+                fontFamily: 'Inter',
+                fontSize: 36,
+                color: '#1e1e1e',
+                bold: true,
+                italic: false,
+                underline: false
+            });
+            slide.elements.push({
+                id: Date.now() + 1,
+                type: 'text',
+                x: 80,
+                y: 120,
+                width: 380,
+                height: 350,
+                content: 'Colonne gauche...',
+                fontFamily: 'Inter',
+                fontSize: 18,
+                color: '#333333',
+                bold: false,
+                italic: false,
+                underline: false
+            });
+            slide.elements.push({
+                id: Date.now() + 2,
+                type: 'text',
+                x: 500,
+                y: 120,
+                width: 380,
+                height: 350,
+                content: 'Colonne droite...',
+                fontFamily: 'Inter',
+                fontSize: 18,
+                color: '#333333',
+                bold: false,
+                italic: false,
+                underline: false
+            });
+            break;
+        case 'imageText':
+            slide.elements.push({
+                id: Date.now(),
+                type: 'shape',
+                shape: 'rectangle',
+                x: 40,
+                y: 70,
+                width: 400,
+                height: 400,
+                color: '#e0e0e0'
+            });
+            slide.elements.push({
+                id: Date.now() + 1,
+                type: 'text',
+                x: 480,
+                y: 70,
+                width: 440,
+                height: 50,
+                content: 'Titre',
+                fontFamily: 'Inter',
+                fontSize: 32,
+                color: '#1e1e1e',
+                bold: true,
+                italic: false,
+                underline: false
+            });
+            slide.elements.push({
+                id: Date.now() + 2,
+                type: 'text',
+                x: 480,
+                y: 140,
+                width: 440,
+                height: 330,
+                content: 'Description ou contenu à côté de l\'image...',
+                fontFamily: 'Inter',
+                fontSize: 18,
+                color: '#333333',
+                bold: false,
+                italic: false,
+                underline: false
+            });
+            break;
+    }
+    
+    state.slides.push(slide);
+    state.currentSlideIndex = state.slides.length - 1;
+    updateSlidesList();
+    renderCurrentSlide();
+    updateSlideCounter();
+    saveProject();
 }
 
 function addSlide(){
@@ -109,6 +398,7 @@ function addSlide(){
 
 function deleteSlide(index){
     if(state.slides.length<=1)return;
+    saveToHistory();
     state.slides.splice(index,1);
     if(state.currentSlideIndex>=state.slides.length){
         state.currentSlideIndex=state.slides.length-1;
@@ -320,13 +610,19 @@ function renderSlideContent(slide,isThumbnail=false){
         }
         switch(elem.type){
             case'text':
-                content=`<div class="slide-element text-element ${selected}" data-id="${elem.id}" style="${style}font-family:${elem.fontFamily};font-size:${elem.fontSize}px;color:${elem.color};font-weight:${elem.bold?'bold':'normal'};font-style:${elem.italic?'italic':'normal'};text-decoration:${elem.underline?'underline':'none'};">${elem.content}${resizeHandles}</div>`;
+                const textAlign = elem.textAlign || 'left';
+                content=`<div class="slide-element text-element ${selected}" data-id="${elem.id}" style="${style}font-family:${elem.fontFamily};font-size:${elem.fontSize}px;color:${elem.color};font-weight:${elem.bold?'bold':'normal'};font-style:${elem.italic?'italic':'normal'};text-decoration:${elem.underline?'underline':'none'};text-align:${textAlign};">${elem.content}${resizeHandles}</div>`;
                 break;
             case'image':
                 content=`<div class="slide-element image-element ${selected}" data-id="${elem.id}" style="${style}"><img src="${elem.src}" alt="Image">${resizeHandles}</div>`;
                 break;
             case'shape':
                 content=`<div class="slide-element shape-element ${selected}" data-id="${elem.id}" style="${style}">${renderShape(elem.shape,elem.color||'#7c3aed')}${resizeHandles}</div>`;
+                break;
+            case'navlink':
+                const targetIndex = state.slides.findIndex(s => s.id === elem.targetSlideId);
+                const targetLabel = targetIndex !== -1 ? `Slide ${targetIndex + 1}` : 'Non défini';
+                content=`<div class="slide-element navlink-element ${selected}" data-id="${elem.id}" data-target="${elem.targetSlideId}" style="${style}background-color:${elem.color};"><div class="navlink-content"><i class="fas fa-arrow-right"></i><span class="navlink-label">${elem.label || targetLabel}</span></div><div class="navlink-target-badge">${targetLabel}</div>${resizeHandles}</div>`;
                 break;
         }
         return content;
@@ -346,6 +642,7 @@ function renderShape(shape,color){
 }
 
 function addTextElement(){
+    saveToHistory();
     const element={id:Date.now(),type:'text',x:100,y:100,width:300,height:60,content:'Cliquez pour editer',fontFamily:'Inter',fontSize:24,color:'#1e1e1e',bold:false,italic:false,underline:false};
     state.slides[state.currentSlideIndex].elements.push(element);
     state.selectedElement=element;
@@ -355,12 +652,85 @@ function addTextElement(){
 }
 
 function addShapeElement(shape){
+    saveToHistory();
     const element={id:Date.now(),type:'shape',shape:shape,x:200,y:150,width:150,height:150,color:'#7c3aed'};
     state.slides[state.currentSlideIndex].elements.push(element);
     state.selectedElement=element;
     renderCurrentSlide();
     showElementProperties();
     saveProject();
+}
+
+function addNavLinkElement(){
+    saveToHistory();
+    // Par défaut, cibler la slide suivante si elle existe, sinon la première
+    const targetIndex = state.currentSlideIndex < state.slides.length - 1 ? state.currentSlideIndex + 1 : 0;
+    const targetSlide = state.slides[targetIndex];
+    const element = {
+        id: Date.now(),
+        type: 'navlink',
+        x: 150,
+        y: 200,
+        width: 200,
+        height: 60,
+        targetSlideId: targetSlide ? targetSlide.id : null,
+        label: 'Aller à la slide ' + (targetIndex + 1),
+        color: '#cc6699'
+    };
+    state.slides[state.currentSlideIndex].elements.push(element);
+    state.selectedElement = element;
+    renderCurrentSlide();
+    showElementProperties();
+    saveProject();
+}
+
+function updateNavLinkTarget(){
+    if(!state.selectedElement || state.selectedElement.type !== 'navlink') return;
+    const select = document.getElementById('targetSlideSelect');
+    const targetSlideId = parseInt(select.value);
+    state.selectedElement.targetSlideId = targetSlideId;
+    const targetIndex = state.slides.findIndex(s => s.id === targetSlideId);
+    if(targetIndex !== -1 && !document.getElementById('navLinkLabel').value.startsWith('Aller à la slide')){
+        // Ne pas écraser si l'utilisateur a personnalisé
+    }
+    renderCurrentSlide();
+    updateSlidesList();
+    saveProject();
+}
+
+function updateNavLinkLabel(){
+    if(!state.selectedElement || state.selectedElement.type !== 'navlink') return;
+    state.selectedElement.label = document.getElementById('navLinkLabel').value || 'Lien';
+    renderCurrentSlide();
+    updateSlidesList();
+    saveProject();
+}
+
+function updateNavLinkColor(){
+    if(!state.selectedElement || state.selectedElement.type !== 'navlink') return;
+    state.selectedElement.color = document.getElementById('navLinkColor').value;
+    renderCurrentSlide();
+    updateSlidesList();
+    saveProject();
+}
+
+function populateTargetSlideSelect(){
+    const select = document.getElementById('targetSlideSelect');
+    select.innerHTML = '';
+    state.slides.forEach((slide, index) => {
+        // Ne pas afficher la slide actuelle comme option
+        if(index !== state.currentSlideIndex){
+            const option = document.createElement('option');
+            option.value = slide.id;
+            const title = getSlideTitle(slide);
+            option.textContent = `Slide ${index + 1} - ${title}`;
+            select.appendChild(option);
+        }
+    });
+    // Sélectionner la valeur actuelle
+    if(state.selectedElement && state.selectedElement.targetSlideId){
+        select.value = state.selectedElement.targetSlideId;
+    }
 }
 
 function handleImageUpload(e){
@@ -383,6 +753,7 @@ function addImageFromUrl(){
 }
 
 function addImageElement(src){
+    saveToHistory();
     const element={id:Date.now(),type:'image',x:150,y:100,width:300,height:200,src:src};
     state.slides[state.currentSlideIndex].elements.push(element);
     state.selectedElement=element;
@@ -444,6 +815,7 @@ function startDrag(e){
     const elem=e.target.closest('.slide-element');
     if(!elem || state.isEditing)return;
     e.preventDefault();
+    saveToHistory();
     const id=parseInt(elem.dataset.id);
     state.selectedElement=findElementById(id);
     state.isDragging=true;
@@ -455,6 +827,7 @@ function startDrag(e){
 
 function startResize(e){
     e.stopPropagation();
+    saveToHistory();
     state.isResizing=true;
     state.resizeHandle=e.target.classList[1];
     state.startX=e.clientX;
@@ -521,17 +894,64 @@ function handleCanvasMouseDown(e){
         state.selectedElement=null;
         renderCurrentSlide();
         hideElementProperties();
+        hideTextTools();
     }
+}
+
+function showTextTools(){
+    document.getElementById('textTools').style.display = 'flex';
+    updateTextToolsState();
+}
+
+function hideTextTools(){
+    document.getElementById('textTools').style.display = 'none';
+}
+
+function updateTextToolsState(){
+    if(!state.selectedElement || state.selectedElement.type !== 'text') return;
+    
+    // Mettre à jour l'état des boutons de formatage
+    document.getElementById('boldBtn').classList.toggle('active', state.selectedElement.bold);
+    document.getElementById('italicBtn').classList.toggle('active', state.selectedElement.italic);
+    document.getElementById('underlineBtn').classList.toggle('active', state.selectedElement.underline);
+    
+    // Mettre à jour les boutons d'alignement
+    const align = state.selectedElement.textAlign || 'left';
+    document.getElementById('alignLeftBtn').classList.toggle('active', align === 'left');
+    document.getElementById('alignCenterBtn').classList.toggle('active', align === 'center');
+    document.getElementById('alignRightBtn').classList.toggle('active', align === 'right');
+    
+    // Mettre à jour les sélecteurs
+    document.getElementById('fontSelect').value = state.selectedElement.fontFamily;
+    document.getElementById('fontSizeSelect').value = state.selectedElement.fontSize;
+    document.getElementById('textColorPicker').value = state.selectedElement.color;
 }
 
 function showElementProperties(){
     if(!state.selectedElement)return;
     elementProperties.style.display='block';
     const textContentRow = document.getElementById('textContentRow');
+    const navLinkRow = document.getElementById('navLinkRow');
+    const navLinkLabelRow = document.getElementById('navLinkLabelRow');
+    const navLinkColorRow = document.getElementById('navLinkColorRow');
+    
+    // Masquer toutes les propriétés spécifiques par défaut
+    textContentRow.style.display = 'none';
+    navLinkRow.style.display = 'none';
+    navLinkLabelRow.style.display = 'none';
+    navLinkColorRow.style.display = 'none';
+    
     if(state.selectedElement.type === 'text'){
         textContentRow.style.display = 'flex';
+        showTextTools();
     } else {
-        textContentRow.style.display = 'none';
+        hideTextTools();
+        if(state.selectedElement.type === 'navlink'){
+            navLinkRow.style.display = 'flex';
+            navLinkLabelRow.style.display = 'flex';
+            navLinkColorRow.style.display = 'flex';
+            populateTargetSlideSelect();
+        }
     }
     updatePropertiesInputs();
 }
@@ -539,6 +959,10 @@ function showElementProperties(){
 function hideElementProperties(){
     elementProperties.style.display='none';
     document.getElementById('textContentRow').style.display = 'none';
+    document.getElementById('navLinkRow').style.display = 'none';
+    document.getElementById('navLinkLabelRow').style.display = 'none';
+    document.getElementById('navLinkColorRow').style.display = 'none';
+    hideTextTools();
 }
 
 function updatePropertiesInputs(){
@@ -551,8 +975,21 @@ function updatePropertiesInputs(){
         const content = state.selectedElement.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
         document.getElementById('elemTextContent').value = content;
     }
+    if(state.selectedElement.type === 'navlink'){
+        document.getElementById('targetSlideSelect').value = state.selectedElement.targetSlideId;
+        document.getElementById('navLinkLabel').value = state.selectedElement.label || '';
+        document.getElementById('navLinkColor').value = state.selectedElement.color || '#cc6699';
+    }
 }
 
+function setTextAlign(align){
+    if(!state.selectedElement || state.selectedElement.type !== 'text') return;
+    state.selectedElement.textAlign = align;
+    renderCurrentSlide();
+    updateSlidesList();
+    updateTextToolsState();
+    saveProject();
+}
 function updateElementPosition(){
     if(!state.selectedElement)return;
     state.selectedElement.x=parseInt(document.getElementById('elemX').value)||0;
@@ -582,6 +1019,7 @@ function updateElementTextContent(){
 
 function deleteSelectedElement(){
     if(!state.selectedElement)return;
+    saveToHistory();
     const slide=state.slides[state.currentSlideIndex];
     const index=slide.elements.findIndex(e=>e.id===state.selectedElement.id);
     if(index!==-1){
@@ -708,16 +1146,45 @@ function renderPresentationSlide(){
     container.innerHTML='<div class="presentation-slide-content" style="background:'+slide.backgroundColor+';width:'+(960*scale)+'px;height:'+(540*scale)+'px;">'+slide.elements.map(elem=>{
         const style='position:absolute;left:'+(elem.x*scale)+'px;top:'+(elem.y*scale)+'px;width:'+(elem.width*scale)+'px;height:'+(elem.height*scale)+'px;';
         switch(elem.type){
-            case'text':return'<div style="'+style+'font-family:'+elem.fontFamily+';font-size:'+(elem.fontSize*scale)+'px;color:'+elem.color+';font-weight:'+(elem.bold?'bold':'normal')+';font-style:'+(elem.italic?'italic':'normal')+';text-decoration:'+(elem.underline?'underline':'none')+';">'+elem.content+'</div>';
+            case'text':
+                const textAlign = elem.textAlign || 'left';
+                return'<div style="'+style+'font-family:'+elem.fontFamily+';font-size:'+(elem.fontSize*scale)+'px;color:'+elem.color+';font-weight:'+(elem.bold?'bold':'normal')+';font-style:'+(elem.italic?'italic':'normal')+';text-decoration:'+(elem.underline?'underline':'none')+';text-align:'+textAlign+';">'+elem.content+'</div>';
             case'image':return'<div style="'+style+'"><img src="'+elem.src+'" style="width:100%;height:100%;object-fit:contain;"></div>';
             case'shape':return'<div style="'+style+'">'+renderShape(elem.shape,elem.color||'#7c3aed')+'</div>';
+            case'navlink':return'<div class="pres-navlink" data-target="'+elem.targetSlideId+'" style="'+style+'background-color:'+elem.color+';border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:'+(16*scale)+'px;font-weight:600;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:transform 0.2s;"><i class="fas fa-arrow-right" style="margin-right:8px;"></i>'+(elem.label||'Lien')+'</div>';
             default:return'';
         }
     }).join('')+'</div>';
     
+    // Ajouter les event listeners pour les navlinks
+    container.querySelectorAll('.pres-navlink').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetSlideId = parseInt(link.dataset.target);
+            navigateToSlideById(targetSlideId);
+        });
+        link.addEventListener('mouseenter', () => {
+            link.style.transform = 'scale(1.05)';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.style.transform = 'scale(1)';
+        });
+    });
+    
     // Afficher la position dans le parcours
     const totalSteps = state.presentationPath ? state.presentationPath.length : state.slides.length;
     document.getElementById('presCounter').textContent = (state.presentationStep + 1) + ' / ' + totalSteps;
+}
+
+function navigateToSlideById(targetSlideId){
+    const targetIndex = state.slides.findIndex(s => s.id === targetSlideId);
+    if(targetIndex === -1) return;
+    
+    // Naviguer directement vers la slide cible
+    // On abandonne le chemin prédéfini pour permettre une navigation libre
+    state.presentationPath = null;
+    state.presentationStep = targetIndex;
+    renderPresentationSlide();
 }
 
 function navigatePresentation(direction){

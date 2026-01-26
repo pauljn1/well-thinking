@@ -19,19 +19,8 @@
                 <i class="fas fa-window-restore"></i>
                 <span>Flowpoint</span>
             </div>
-            <div class="toolbar">
-                <div class="tool-group">
-                    <button class="tool-btn" id="addTextBtn" title="Ajouter du texte">
-                        <i class="fas fa-font"></i>
-                    </button>
-                    <button class="tool-btn" id="addImageBtn" title="Ajouter une image">
-                        <i class="fas fa-image"></i>
-                    </button>
-                    <button class="tool-btn" id="addShapeBtn" title="Ajouter une forme">
-                        <i class="fas fa-shapes"></i>
-                    </button>
-                </div>
-                <div class="separator"></div>
+            <!-- Outils de texte - visibles uniquement lors de l'édition de texte -->
+            <div class="toolbar text-tools" id="textTools" style="display: none;">
                 <div class="tool-group">
                     <select id="fontSelect" class="font-select">
                         <option value="Inter">Inter</option>
@@ -60,14 +49,25 @@
                     <button class="tool-btn" id="italicBtn" title="Italique">
                         <i class="fas fa-italic"></i>
                     </button>
-                    <button class="tool-btn" id="underlineBtn" title="Soulign�">
+                    <button class="tool-btn" id="underlineBtn" title="Souligné">
                         <i class="fas fa-underline"></i>
                     </button>
                 </div>
                 <div class="separator"></div>
                 <div class="tool-group">
+                    <button class="tool-btn" id="alignLeftBtn" title="Aligner à gauche">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    <button class="tool-btn" id="alignCenterBtn" title="Centrer">
+                        <i class="fas fa-align-center"></i>
+                    </button>
+                    <button class="tool-btn" id="alignRightBtn" title="Aligner à droite">
+                        <i class="fas fa-align-right"></i>
+                    </button>
+                </div>
+                <div class="separator"></div>
+                <div class="tool-group">
                     <input type="color" id="textColorPicker" class="color-picker" value="#1e1e1e" title="Couleur du texte">
-                    <input type="color" id="bgColorPicker" class="color-picker" value="#ffffff" title="Couleur de fond">
                 </div>
             </div>
             <div class="actions">
@@ -87,9 +87,54 @@
             <aside class="slides-panel">
                 <div class="panel-header">
                     <h3>Diapositives</h3>
-                    <button class="add-slide-btn" id="addSlideBtn" title="Ajouter une diapositive">
-                        <i class="fas fa-plus"></i>
-                    </button>
+                    <div class="add-slide-wrapper">
+                        <button class="add-slide-btn" id="addSlideBtn" title="Ajouter une diapositive">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <div class="add-slide-dropdown" id="addSlideDropdown">
+                            <button class="dropdown-item" data-template="blank">
+                                <div class="dropdown-preview blank"></div>
+                                <span>Vierge</span>
+                            </button>
+                            <button class="dropdown-item" data-template="title">
+                                <div class="dropdown-preview title-only">
+                                    <div class="tpl-title"></div>
+                                </div>
+                                <span>Titre</span>
+                            </button>
+                            <button class="dropdown-item" data-template="titleText">
+                                <div class="dropdown-preview title-text">
+                                    <div class="tpl-title"></div>
+                                    <div class="tpl-text"></div>
+                                </div>
+                                <span>Titre + Texte</span>
+                            </button>
+                            <button class="dropdown-item" data-template="titleImage">
+                                <div class="dropdown-preview title-image">
+                                    <div class="tpl-title"></div>
+                                    <div class="tpl-image"><i class="fas fa-image"></i></div>
+                                </div>
+                                <span>Titre + Image</span>
+                            </button>
+                            <button class="dropdown-item" data-template="twoColumns">
+                                <div class="dropdown-preview two-cols">
+                                    <div class="tpl-title"></div>
+                                    <div class="tpl-cols">
+                                        <div class="tpl-col"></div>
+                                        <div class="tpl-col"></div>
+                                    </div>
+                                </div>
+                                <span>2 Colonnes</span>
+                            </button>
+                            <button class="dropdown-item" data-template="imageText">
+                                <div class="dropdown-preview img-text">
+                                    <div class="tpl-img-left"><i class="fas fa-image"></i></div>
+                                    <div class="tpl-text-right"></div>
+                                </div>
+                                <span>Image + Texte</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <!-- Onglets de vue -->
                 <div class="view-tabs">
@@ -145,8 +190,30 @@
                             <label>Fond</label>
                             <input type="color" id="slideBgColor" value="#ffffff">
                         </div>
-
                     </div>
+                    
+                    <div class="property-section">
+                        <h4>Ajouter un élément</h4>
+                        <div class="add-elements-grid">
+                            <button class="add-element-btn" id="addTextBtnSide" title="Ajouter du texte">
+                                <i class="fas fa-font"></i>
+                                <span>Texte</span>
+                            </button>
+                            <button class="add-element-btn" id="addImageBtnSide" title="Ajouter une image">
+                                <i class="fas fa-image"></i>
+                                <span>Image</span>
+                            </button>
+                            <button class="add-element-btn" id="addShapeBtnSide" title="Ajouter une forme">
+                                <i class="fas fa-shapes"></i>
+                                <span>Forme</span>
+                            </button>
+                            <button class="add-element-btn" id="addNavLinkBtnSide" title="Lien de navigation">
+                                <i class="fas fa-link"></i>
+                                <span>Navigation</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="property-section element-properties" id="elementProperties" style="display: none;">
                         <h4>Élément sélectionné</h4>
                         <div class="property-row text-content-row" id="textContentRow" style="display: none;">
@@ -168,6 +235,20 @@
                         <div class="property-row">
                             <label>Hauteur</label>
                             <input type="number" id="elemHeight" value="100">
+                        </div>
+                        <div class="property-row navlink-row" id="navLinkRow" style="display: none;">
+                            <label>Slide cible</label>
+                            <select id="targetSlideSelect">
+                                <!-- Options générées dynamiquement -->
+                            </select>
+                        </div>
+                        <div class="property-row navlink-row" id="navLinkLabelRow" style="display: none;">
+                            <label>Texte du lien</label>
+                            <input type="text" id="navLinkLabel" placeholder="Aller à...">
+                        </div>
+                        <div class="property-row navlink-row" id="navLinkColorRow" style="display: none;">
+                            <label>Couleur</label>
+                            <input type="color" id="navLinkColor" value="#cc6699">
                         </div>
 
                         <button class="btn btn-danger" id="deleteElement">
