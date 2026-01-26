@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Well Thinking - Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Well Thinking : Scenario Builder</h1>
+        <button id="btn-generate">🚀 Générer le Code Python</button>
+    </header>
+
+    <main>
+        <section id="canvas-container">
+            <div id="graph-editor">
+                <p>Zone du Graphe (Simulée pour la démo)</p>
+                <div class="node" id="node-1">Début: "Bonjour voyageur !"</div>
+            </div>
+        </section>
+
+        <section id="output-container">
+            <h3>Code Python Généré :</h3>
+            <pre><code id="python-output"># Le code apparaîtra ici...</code></pre>
+        </section>
+    </main>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
