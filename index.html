@@ -140,9 +140,11 @@
                 <div class="view-tabs">
                     <button class="view-tab active" id="listViewBtn" title="Vue liste">
                         <i class="fas fa-list"></i>
+                        <span>Liste</span>
                     </button>
-                    <button class="view-tab" id="treeFullscreenBtn" title="Arborescence plein écran">
+                    <button class="view-tab" id="treeFullscreenBtn" title="Vue scénario avec connexions">
                         <i class="fas fa-project-diagram"></i>
+                        <span>Scénario</span>
                     </button>
                 </div>
                 <!-- Vue liste normale -->
@@ -338,7 +340,7 @@
         </div>
     </div>
 
-    <!-- Mode Arborescence Plein Écran -->
+    <!-- Mode Arborescence Plein Écran - Système Scénario -->
     <div class="tree-fullscreen" id="treeFullscreen">
         <div class="tree-header">
             <div class="tree-title">
@@ -349,14 +351,14 @@
                 <button class="tree-tool-btn primary" id="addSlideTreeBtn" title="Ajouter une slide">
                     <i class="fas fa-plus"></i> Nouvelle slide
                 </button>
-                <button class="tree-tool-btn" id="connectModeBtn" title="Mode connexion">
-                    <i class="fas fa-link"></i> Connecter
-                </button>
                 <button class="tree-tool-btn" id="resetTreeBtn" title="Réorganiser">
                     <i class="fas fa-th"></i> Réorganiser
                 </button>
                 <button class="tree-tool-btn danger" id="clearConnectionsBtn" title="Effacer connexions">
                     <i class="fas fa-unlink"></i>
+                </button>
+                <button class="tree-tool-btn preview-btn" id="previewTreeBtn" title="Aperçu du scénario">
+                    <i class="fas fa-play"></i> Aperçu
                 </button>
             </div>
             <button class="tree-close-btn" id="closeTreeBtn">
@@ -364,7 +366,7 @@
             </button>
         </div>
         
-        <!-- Canvas principal -->
+        <!-- Canvas principal avec SVG pour les connexions -->
         <div class="tree-canvas" id="treeCanvas">
             <svg class="tree-svg" id="treeSvg"></svg>
             <div class="tree-nodes" id="treeNodes"></div>
@@ -372,9 +374,22 @@
         
         <!-- Barre d'aide -->
         <div class="tree-help">
-            <span><i class="fas fa-mouse-pointer"></i> Glisser pour déplacer</span>
-            <span><i class="fas fa-link"></i> Cliquer sur les points pour connecter</span>
+            <span><i class="fas fa-arrows-alt"></i> Glisser l'icône ☰ pour déplacer</span>
+            <span><i class="fas fa-circle"></i> Tirer le point rose pour connecter</span>
             <span><i class="fas fa-hand-pointer"></i> Double-clic pour éditer</span>
+        </div>
+    </div>
+
+    <!-- Overlay d'aperçu du scénario -->
+    <div id="scenarioPreviewOverlay" class="scenario-preview-overlay hidden">
+        <div class="preview-header">
+            <button id="scenarioPreviewBack"><i class="fas fa-arrow-left"></i> Retour</button>
+            <button id="closeScenarioPreview"><i class="fas fa-times"></i> Fermer</button>
+        </div>
+        <div id="scenarioPreviewCard" class="preview-card">
+            <h2 id="scenarioPreviewTitle">Titre</h2>
+            <div id="scenarioPreviewBody">Contenu</div>
+            <div id="scenarioPreviewChoices" class="preview-choices"></div>
         </div>
     </div>
 

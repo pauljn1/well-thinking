@@ -76,9 +76,11 @@ function setupEventListeners(){
     document.getElementById('treeFullscreenBtn').addEventListener('click',openTreeFullscreen);
     document.getElementById('closeTreeBtn').addEventListener('click',closeTreeFullscreen);
     document.getElementById('addSlideTreeBtn').addEventListener('click',addSlideFromTree);
-    document.getElementById('connectModeBtn').addEventListener('click',toggleConnectMode);
     document.getElementById('resetTreeBtn').addEventListener('click',resetTreeLayout);
     document.getElementById('clearConnectionsBtn').addEventListener('click',clearAllConnections);
+    document.getElementById('previewTreeBtn').addEventListener('click',startPresentationFromTree);
+    document.getElementById('scenarioPreviewBack').addEventListener('click',goBackInPreview);
+    document.getElementById('closeScenarioPreview').addEventListener('click',closeScenarioPreview);
     document.getElementById('boldBtn').addEventListener('click',()=>toggleFormat('bold'));
     document.getElementById('italicBtn').addEventListener('click',()=>toggleFormat('italic'));
     document.getElementById('underlineBtn').addEventListener('click',()=>toggleFormat('underline'));
@@ -1071,6 +1073,12 @@ function setSlideBgColor(color){
     saveProject();
 }
 
+/* Lancer la présentation depuis l'arborescence */
+function startPresentationFromTree() {
+    closeTreeFullscreen();
+    startPresentation();
+}
+
 function startPresentation(){
     presentationMode.classList.add('active');
     
@@ -1086,7 +1094,7 @@ function startPresentation(){
 // Construit le chemin de présentation en suivant les connexions
 function buildPresentationPath() {
     // Si pas de connexions, suivre l'ordre normal
-    if (!treeState.connections || treeState.connections.length === 0) {
+    if (!scenarioState.connections || scenarioState.connections.length === 0) {
         return state.slides.map((s, i) => i);
     }
     
@@ -1104,11 +1112,11 @@ function buildPresentationPath() {
             path.push(slideIndex);
         }
         
-        // Chercher la connexion sortante de cette slide
-        const nextConnection = treeState.connections.find(c => c.from.slideId == currentSlideId);
+        // Chercher la connexion sortante de cette slide (nouvelle structure)
+        const nextConnection = scenarioState.connections.find(c => c.from == currentSlideId);
         
         if (nextConnection) {
-            currentSlideId = nextConnection.to.slideId;
+            currentSlideId = nextConnection.to;
         } else {
             // Pas de connexion sortante, arrêter
             currentSlideId = null;
@@ -1130,64 +1138,143 @@ function exitPresentation(){
     document.removeEventListener('keydown',handlePresentationKeys);
     state.presentationPath = null;
     state.presentationStep = 0;
+    state.presentationHistory = [];
 }
 
 function renderPresentationSlide(){
-    // Utiliser le chemin de présentation
+    // Utiliser le chemin de présentation ou l'index direct
     const slideIndex = state.presentationPath ? state.presentationPath[state.presentationStep] : state.presentationStep;
     const slide = state.slides[slideIndex];
     
     if (!slide) return;
     
-    const container=document.getElementById('presentationSlide');
-    const scaleX=window.innerWidth/960;
-    const scaleY=(window.innerHeight-60)/540;
-    const scale=Math.min(scaleX,scaleY);
-    container.innerHTML='<div class="presentation-slide-content" style="background:'+slide.backgroundColor+';width:'+(960*scale)+'px;height:'+(540*scale)+'px;">'+slide.elements.map(elem=>{
-        const style='position:absolute;left:'+(elem.x*scale)+'px;top:'+(elem.y*scale)+'px;width:'+(elem.width*scale)+'px;height:'+(elem.height*scale)+'px;';
-        switch(elem.type){
-            case'text':
-                const textAlign = elem.textAlign || 'left';
-                return'<div style="'+style+'font-family:'+elem.fontFamily+';font-size:'+(elem.fontSize*scale)+'px;color:'+elem.color+';font-weight:'+(elem.bold?'bold':'normal')+';font-style:'+(elem.italic?'italic':'normal')+';text-decoration:'+(elem.underline?'underline':'none')+';text-align:'+textAlign+';">'+elem.content+'</div>';
-            case'image':return'<div style="'+style+'"><img src="'+elem.src+'" style="width:100%;height:100%;object-fit:contain;"></div>';
-            case'shape':return'<div style="'+style+'">'+renderShape(elem.shape,elem.color||'#7c3aed')+'</div>';
-            case'navlink':return'<div class="pres-navlink" data-target="'+elem.targetSlideId+'" style="'+style+'background-color:'+elem.color+';border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:'+(16*scale)+'px;font-weight:600;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:transform 0.2s;"><i class="fas fa-arrow-right" style="margin-right:8px;"></i>'+(elem.label||'Lien')+'</div>';
-            default:return'';
-        }
-    }).join('')+'</div>';
+    const container = document.getElementById('presentationSlide');
     
-    // Ajouter les event listeners pour les navlinks
+    // Calculer l'échelle pour que la slide rentre bien avec de la place pour les boutons en dessous
+    const maxSlideHeight = window.innerHeight - 180; // Réserver de l'espace pour les boutons de choix
+    const scaleX = (window.innerWidth - 100) / 960;
+    const scaleY = maxSlideHeight / 540;
+    const scale = Math.min(scaleX, scaleY, 1.5); // Limiter le zoom max
+    
+    // Construire le contenu de la slide
+    let slideHtml = '<div class="presentation-slide-wrapper">';
+    slideHtml += '<div class="presentation-slide-content" style="background:' + slide.backgroundColor + ';width:' + (960 * scale) + 'px;height:' + (540 * scale) + 'px;">';
+    
+    slideHtml += slide.elements.map(elem => {
+        const style = 'position:absolute;left:' + (elem.x * scale) + 'px;top:' + (elem.y * scale) + 'px;width:' + (elem.width * scale) + 'px;height:' + (elem.height * scale) + 'px;';
+        switch(elem.type) {
+            case 'text':
+                const textAlign = elem.textAlign || 'left';
+                return '<div style="' + style + 'font-family:' + elem.fontFamily + ';font-size:' + (elem.fontSize * scale) + 'px;color:' + elem.color + ';font-weight:' + (elem.bold ? 'bold' : 'normal') + ';font-style:' + (elem.italic ? 'italic' : 'normal') + ';text-decoration:' + (elem.underline ? 'underline' : 'none') + ';text-align:' + textAlign + ';">' + elem.content + '</div>';
+            case 'image':
+                return '<div style="' + style + '"><img src="' + elem.src + '" style="width:100%;height:100%;object-fit:contain;"></div>';
+            case 'shape':
+                return '<div style="' + style + '">' + renderShape(elem.shape, elem.color || '#7c3aed') + '</div>';
+            case 'navlink':
+                return '<div class="pres-navlink" data-target="' + elem.targetSlideId + '" style="' + style + 'background-color:' + elem.color + ';border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:' + (16 * scale) + 'px;font-weight:600;box-shadow:0 4px 15px rgba(0,0,0,0.2);"><i class="fas fa-arrow-right" style="margin-right:8px;"></i>' + (elem.label || 'Lien') + '</div>';
+            default:
+                return '';
+        }
+    }).join('');
+    
+    slideHtml += '</div>'; // Fin presentation-slide-content
+    
+    // Ajouter les boutons de choix basés sur les connexions du scénario
+    loadConnections(); // S'assurer que les connexions sont chargées
+    const outgoingConnections = scenarioState.connections.filter(c => c.from == slide.id);
+    
+    if (outgoingConnections.length > 0) {
+        slideHtml += '<div class="presentation-choices">';
+        slideHtml += '<div class="choices-label">Choisissez la suite :</div>';
+        slideHtml += '<div class="choices-buttons">';
+        
+        outgoingConnections.forEach(conn => {
+            const targetSlide = state.slides.find(s => s.id == conn.to);
+            if (targetSlide) {
+                const targetIndex = state.slides.indexOf(targetSlide);
+                const targetTitle = getSlideTitle(targetSlide);
+                // Utiliser le label personnalisé s'il existe, sinon le titre par défaut
+                const buttonLabel = conn.label ? conn.label : 'Slide ' + (targetIndex + 1) + ' - ' + targetTitle;
+                slideHtml += '<button class="pres-choice-btn" data-target="' + conn.to + '">';
+                slideHtml += '<i class="fas fa-arrow-right"></i>';
+                slideHtml += '<span>' + buttonLabel + '</span>';
+                slideHtml += '</button>';
+            }
+        });
+        
+        slideHtml += '</div></div>';
+    } else if (slideIndex < state.slides.length - 1 && !hasAnyOutgoingConnection(slide.id)) {
+        // Pas de connexion définie mais pas la dernière slide : proposer de continuer
+        // (ne rien afficher si on est à la fin)
+    }
+    
+    slideHtml += '</div>'; // Fin presentation-slide-wrapper
+    
+    container.innerHTML = slideHtml;
+    
+    // Event listeners pour les navlinks intégrés à la slide
     container.querySelectorAll('.pres-navlink').forEach(link => {
         link.addEventListener('click', (e) => {
             e.stopPropagation();
             const targetSlideId = parseInt(link.dataset.target);
-            navigateToSlideById(targetSlideId);
-        });
-        link.addEventListener('mouseenter', () => {
-            link.style.transform = 'scale(1.05)';
-        });
-        link.addEventListener('mouseleave', () => {
-            link.style.transform = 'scale(1)';
+            navigateToSlideByIdWithHistory(targetSlideId, slide.id);
         });
     });
     
-    // Afficher la position dans le parcours
-    const totalSteps = state.presentationPath ? state.presentationPath.length : state.slides.length;
-    document.getElementById('presCounter').textContent = (state.presentationStep + 1) + ' / ' + totalSteps;
+    // Event listeners pour les boutons de choix en dessous
+    container.querySelectorAll('.pres-choice-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetSlideId = parseInt(btn.dataset.target);
+            navigateToSlideByIdWithHistory(targetSlideId, slide.id);
+        });
+    });
+    
+    // Afficher la position
+    const totalSlides = state.slides.length;
+    document.getElementById('presCounter').textContent = (slideIndex + 1) + ' / ' + totalSlides;
+}
+
+// Vérifie si une slide a des connexions sortantes
+function hasAnyOutgoingConnection(slideId) {
+    return scenarioState.connections.some(c => c.from == slideId);
+}
+
+// Navigation avec historique pour le bouton retour
+function navigateToSlideByIdWithHistory(targetSlideId, fromSlideId) {
+    if (!state.presentationHistory) state.presentationHistory = [];
+    state.presentationHistory.push(fromSlideId);
+    
+    const targetIndex = state.slides.findIndex(s => s.id === targetSlideId);
+    if (targetIndex === -1) return;
+    
+    state.presentationPath = null;
+    state.presentationStep = targetIndex;
+    renderPresentationSlide();
 }
 
 function navigateToSlideById(targetSlideId){
     const targetIndex = state.slides.findIndex(s => s.id === targetSlideId);
     if(targetIndex === -1) return;
     
-    // Naviguer directement vers la slide cible
-    // On abandonne le chemin prédéfini pour permettre une navigation libre
     state.presentationPath = null;
     state.presentationStep = targetIndex;
     renderPresentationSlide();
 }
 
 function navigatePresentation(direction){
+    // Si on a des connexions, naviguer via l'historique pour le retour
+    if (direction === -1 && state.presentationHistory && state.presentationHistory.length > 0) {
+        const previousSlideId = state.presentationHistory.pop();
+        const prevIndex = state.slides.findIndex(s => s.id === previousSlideId);
+        if (prevIndex !== -1) {
+            state.presentationStep = prevIndex;
+            renderPresentationSlide();
+            return;
+        }
+    }
+    
+    // Navigation normale
     const totalSteps = state.presentationPath ? state.presentationPath.length : state.slides.length;
     const newStep = state.presentationStep + direction;
     
@@ -1223,164 +1310,206 @@ function findElementById(id){
     return slide.elements.find(e=>e.id===id);
 }
 
-// ============ ARBORESCENCE PLEIN ECRAN - SYSTÈME AVANCÉ ============
+// ============ ARBORESCENCE - SYSTÈME DE SCÉNARIO (Groupe Arborescences) ============
 
-let treeState = {
-    connections: [],
-    connectMode: false,
-    connectFrom: null,
-    dragNode: null,
-    dragOffset: { x: 0, y: 0 }
+/* Variables pour le système de scénario */
+let scenarioState = {
+    connections: [],          // Liste des connexions entre slides
+    isDraggingSlide: false,   // Si une slide est en cours de déplacement
+    startX: 0,                // Position X de départ du drag
+    startY: 0,                // Position Y de départ du drag
+    initialLeft: 0,           // Position left initiale
+    initialTop: 0,            // Position top initiale
+    currentDragSlide: null,   // L'élément slide en cours de drag
+    currentDragSlideId: null, // L'id de la slide dans state.slides
+    isDrawingLine: false,     // Si on trace une connexion
+    tempLine: null,           // Ligne temporaire pendant le tracé
+    startSocket: null,        // Socket de départ
+    startSocketSlideId: null, // Slide de départ pour la connexion
+    previewHistory: []        // Historique pour l'aperçu (bouton retour)
 };
 
+/* Ouvrir le mode arborescence plein écran */
 function openTreeFullscreen() {
     document.getElementById('treeFullscreen').classList.add('active');
     loadConnections();
     renderTreeNodes();
     drawConnections();
+    setupScenarioEvents();
 }
 
+/* Fermer le mode arborescence */
 function closeTreeFullscreen() {
     document.getElementById('treeFullscreen').classList.remove('active');
-    treeState.connectMode = false;
-    treeState.connectFrom = null;
-    updateConnectModeBtn();
+    cleanupScenarioEvents();
 }
 
+/* Configuration des événements globaux pour le scénario */
+let scenarioMouseMoveHandler = null;
+let scenarioMouseUpHandler = null;
+
+function setupScenarioEvents() {
+    scenarioMouseMoveHandler = handleScenarioMouseMove;
+    scenarioMouseUpHandler = handleScenarioMouseUp;
+    document.addEventListener('mousemove', scenarioMouseMoveHandler);
+    document.addEventListener('mouseup', scenarioMouseUpHandler);
+}
+
+function cleanupScenarioEvents() {
+    if (scenarioMouseMoveHandler) {
+        document.removeEventListener('mousemove', scenarioMouseMoveHandler);
+    }
+    if (scenarioMouseUpHandler) {
+        document.removeEventListener('mouseup', scenarioMouseUpHandler);
+    }
+}
+
+/* Gestion du mouvement de la souris */
+function handleScenarioMouseMove(e) {
+    const canvas = document.getElementById('treeCanvas');
+    const svg = document.getElementById('treeSvg');
+    if (!canvas) return;
+
+    // Déplacement d'une slide
+    if (scenarioState.isDraggingSlide && scenarioState.currentDragSlide) {
+        e.preventDefault();
+        const dx = e.clientX - scenarioState.startX;
+        const dy = e.clientY - scenarioState.startY;
+        
+        let newX = scenarioState.initialLeft + dx;
+        let newY = scenarioState.initialTop + dy;
+        
+        // Limiter aux bords
+        newX = Math.max(20, newX);
+        newY = Math.max(20, newY);
+        
+        scenarioState.currentDragSlide.style.left = newX + 'px';
+        scenarioState.currentDragSlide.style.top = newY + 'px';
+        
+        // Mettre à jour la position dans state.slides
+        const slideData = state.slides.find(s => s.id == scenarioState.currentDragSlideId);
+        if (slideData) {
+            slideData.treeX = newX;
+            slideData.treeY = newY;
+        }
+        
+        drawConnections();
+    }
+
+    // Tracé d'une ligne temporaire
+    if (scenarioState.isDrawingLine && scenarioState.tempLine) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - canvasRect.left + canvas.scrollLeft;
+        const mouseY = e.clientY - canvasRect.top + canvas.scrollTop;
+        const lineStartX = parseFloat(scenarioState.tempLine.dataset.startX);
+        const lineStartY = parseFloat(scenarioState.tempLine.dataset.startY);
+        
+        const d = `M ${lineStartX} ${lineStartY} L ${mouseX} ${mouseY}`;
+        scenarioState.tempLine.setAttribute('d', d);
+    }
+}
+
+/* Gestion du relâchement de la souris */
+function handleScenarioMouseUp(e) {
+    // Fin du drag d'une slide
+    if (scenarioState.isDraggingSlide) {
+        scenarioState.isDraggingSlide = false;
+        if (scenarioState.currentDragSlide) {
+            scenarioState.currentDragSlide.style.zIndex = '';
+            scenarioState.currentDragSlide.classList.remove('dragging');
+        }
+        scenarioState.currentDragSlide = null;
+        document.body.style.cursor = 'default';
+        saveProject();
+    }
+
+    // Fin du tracé d'une connexion
+    if (scenarioState.isDrawingLine) {
+        const targetSlide = e.target.closest('.scenario-slide-card');
+        
+        if (targetSlide && scenarioState.startSocketSlideId) {
+            const targetSlideId = targetSlide.dataset.slideId;
+            if (targetSlideId != scenarioState.startSocketSlideId) {
+                createScenarioConnection(scenarioState.startSocketSlideId, targetSlideId);
+            }
+        }
+        
+        // Nettoyer la ligne temporaire
+        if (scenarioState.tempLine) {
+            scenarioState.tempLine.remove();
+            scenarioState.tempLine = null;
+        }
+        scenarioState.isDrawingLine = false;
+        scenarioState.startSocket = null;
+        scenarioState.startSocketSlideId = null;
+    }
+}
+
+/* Rendu des slides sous forme de cartes dans l'arborescence */
 function renderTreeNodes() {
     const container = document.getElementById('treeNodes');
+    if (!container) return;
     container.innerHTML = '';
-    
-    // Nœud de départ
-    const startNode = document.createElement('div');
-    startNode.className = 'tree-start-node';
-    startNode.innerHTML = '<div class="start-icon"><i class="fas fa-play"></i></div><span>Début</span>';
-    startNode.style.left = '50px';
-    startNode.style.top = '50px';
-    container.appendChild(startNode);
     
     // Calculer les positions si pas définies
     state.slides.forEach((slide, index) => {
         if (slide.treeX === null || slide.treeX === undefined) {
             const cols = Math.ceil(Math.sqrt(state.slides.length * 1.5));
-            slide.treeX = 200 + (index % cols) * 260;
-            slide.treeY = 150 + Math.floor(index / cols) * 230;
+            slide.treeX = 100 + (index % cols) * 300;
+            slide.treeY = 100 + Math.floor(index / cols) * 200;
         }
         
-        const node = createTreeNode(slide, index);
-        container.appendChild(node);
+        const card = createScenarioSlideCard(slide, index);
+        container.appendChild(card);
     });
-    
-    // Nœud de fin
-    const endNode = document.createElement('div');
-    endNode.className = 'tree-end-node';
-    endNode.innerHTML = '<div class="end-icon"></div><span>Fin</span>';
-    const lastSlide = state.slides[state.slides.length - 1];
-    if (lastSlide) {
-        endNode.style.left = (lastSlide.treeX + 80) + 'px';
-        endNode.style.top = (lastSlide.treeY + 200) + 'px';
-    } else {
-        endNode.style.left = '100px';
-        endNode.style.top = '300px';
-    }
-    container.appendChild(endNode);
 }
 
-function createTreeNode(slide, index) {
-    const node = document.createElement('div');
+/* Créer une carte de slide style scénario */
+function createScenarioSlideCard(slide, index) {
+    const card = document.createElement('div');
     const isCurrent = index === state.currentSlideIndex;
     
-    node.className = 'family-node' + (isCurrent ? ' current' : '');
-    node.dataset.slideId = slide.id;
-    node.dataset.index = index;
-    node.style.left = slide.treeX + 'px';
-    node.style.top = slide.treeY + 'px';
+    card.className = 'scenario-slide-card' + (isCurrent ? ' current' : '');
+    card.dataset.slideId = slide.id;
+    card.dataset.index = index;
+    card.style.left = slide.treeX + 'px';
+    card.style.top = slide.treeY + 'px';
     
-    const previewHtml = generateSlidePreview(slide);
+    // Générer l'aperçu du contenu
+    const previewContent = generateScenarioPreview(slide);
     
-    node.innerHTML = `
-        <div class="node-header">
-            <div class="node-number">${index + 1}</div>
-            <div class="node-title">Slide ${index + 1}</div>
+    card.innerHTML = `
+        <div class="scenario-card-header">
+            <span class="scenario-card-title">Slide ${index + 1}</span>
+            <i class="fas fa-grip-lines scenario-handle"></i>
         </div>
-        <div class="node-body">
-            ${previewHtml}
+        <div class="scenario-card-body">
+            ${previewContent}
         </div>
-        <div class="node-footer">
-            <button class="node-btn edit-btn" title="Éditer"><i class="fas fa-edit"></i></button>
-            <button class="node-btn delete-btn" title="Supprimer"><i class="fas fa-trash"></i></button>
-        </div>
-        <div class="connection-point top" data-pos="top"></div>
-        <div class="connection-point right" data-pos="right"></div>
-        <div class="connection-point bottom" data-pos="bottom"></div>
-        <div class="connection-point left" data-pos="left"></div>
+        <div class="scenario-socket" title="Tirer pour relier à une autre slide"></div>
     `;
     
-    // Événements
-    setupNodeEvents(node, slide, index);
+    // Événements de la carte
+    setupScenarioCardEvents(card, slide, index);
     
-    return node;
+    return card;
 }
 
-function setupNodeEvents(node, slide, index) {
-    // Drag pour déplacer
-    node.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.node-btn') || e.target.closest('.connection-point')) return;
-        startDragNode(e, slide, node);
-    });
+/* Générer un aperçu du contenu de la slide */
+function generateScenarioPreview(slide) {
+    let html = '<div class="scenario-preview" style="background:' + slide.backgroundColor + ';">';
     
-    // Double-clic pour ouvrir
-    node.addEventListener('dblclick', () => {
-        state.currentSlideIndex = index;
-        updateSlidesList();
-        renderCurrentSlide();
-        updateSlideCounter();
-        closeTreeFullscreen();
-    });
-    
-    // Points de connexion
-    node.querySelectorAll('.connection-point').forEach(point => {
-        point.addEventListener('click', (e) => {
-            e.stopPropagation();
-            handleConnectionPoint(slide.id, point.dataset.pos);
-        });
-    });
-    
-    // Boutons
-    const editBtn = node.querySelector('.edit-btn');
-    const deleteBtn = node.querySelector('.delete-btn');
-    
-    editBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.currentSlideIndex = index;
-        updateSlidesList();
-        renderCurrentSlide();
-        closeTreeFullscreen();
-    });
-    
-    deleteBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (state.slides.length > 1) {
-            deleteSlide(index);
-            renderTreeNodes();
-            drawConnections();
-        }
-    });
-}
-
-function generateSlidePreview(slide) {
-    let html = '<div class="node-preview" style="background:' + slide.backgroundColor + ';">';
-    
-    slide.elements.slice(0, 3).forEach(elem => {
-        const scale = 0.15;
-        const style = `position:absolute;left:${elem.x * scale}px;top:${elem.y * scale}px;width:${elem.width * scale}px;height:${elem.height * scale}px;`;
+    // Afficher les premiers éléments en miniature
+    slide.elements.slice(0, 4).forEach(elem => {
+        const scale = 0.12;
+        const style = `position:absolute;left:${elem.x * scale}px;top:${elem.y * scale}px;width:${elem.width * scale}px;height:${elem.height * scale}px;overflow:hidden;`;
         
         switch(elem.type) {
             case 'text':
-                html += `<div style="${style}font-size:${Math.max(4, elem.fontSize * scale)}px;color:${elem.color};overflow:hidden;">${elem.content.substring(0, 15)}</div>`;
+                html += `<div style="${style}font-size:${Math.max(3, elem.fontSize * scale)}px;color:${elem.color};">${elem.content.substring(0, 20)}</div>`;
                 break;
             case 'image':
-                html += `<div style="${style}"><img src="${elem.src}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+                html += `<div style="${style}"><img src="${elem.src}" style="width:100%;height:100%;object-fit:cover;border-radius:2px;"></div>`;
                 break;
             case 'shape':
                 html += `<div style="${style}">${renderShape(elem.shape, elem.color || '#cc6699')}</div>`;
@@ -1392,202 +1521,294 @@ function generateSlidePreview(slide) {
     return html;
 }
 
-function startDragNode(e, slide, node) {
-    if (e.target.classList.contains('connection-point')) return;
+/* Configurer les événements d'une carte */
+function setupScenarioCardEvents(card, slide, index) {
+    const handle = card.querySelector('.scenario-handle');
+    const socket = card.querySelector('.scenario-socket');
     
-    treeState.dragNode = { slide, node };
-    const rect = node.getBoundingClientRect();
-    treeState.dragOffset = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
+    // Drag par la poignée
+    handle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        scenarioState.isDraggingSlide = true;
+        scenarioState.currentDragSlide = card;
+        scenarioState.currentDragSlideId = slide.id;
+        
+        scenarioState.startX = e.clientX;
+        scenarioState.startY = e.clientY;
+        scenarioState.initialLeft = card.offsetLeft;
+        scenarioState.initialTop = card.offsetTop;
+        
+        card.style.zIndex = '100';
+        card.classList.add('dragging');
+        document.body.style.cursor = 'grabbing';
+    });
     
-    node.style.zIndex = '100';
-    node.classList.add('dragging');
+    // Clic sur le socket pour créer une connexion
+    socket.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        startDrawingConnection(socket, slide.id);
+    });
     
-    const moveHandler = (e) => dragNode(e);
-    const upHandler = () => {
-        document.removeEventListener('mousemove', moveHandler);
-        document.removeEventListener('mouseup', upHandler);
-        endDragNode();
-    };
+    // Double-clic pour éditer la slide
+    card.addEventListener('dblclick', () => {
+        state.currentSlideIndex = index;
+        updateSlidesList();
+        renderCurrentSlide();
+        updateSlideCounter();
+        closeTreeFullscreen();
+    });
     
-    document.addEventListener('mousemove', moveHandler);
-    document.addEventListener('mouseup', upHandler);
-}
-
-function dragNode(e) {
-    if (!treeState.dragNode) return;
-    
-    const canvas = document.getElementById('treeCanvas');
-    const canvasRect = canvas.getBoundingClientRect();
-    
-    let x = e.clientX - canvasRect.left - treeState.dragOffset.x + canvas.scrollLeft;
-    let y = e.clientY - canvasRect.top - treeState.dragOffset.y + canvas.scrollTop;
-    
-    x = Math.max(20, x);
-    y = Math.max(20, y);
-    
-    treeState.dragNode.slide.treeX = x;
-    treeState.dragNode.slide.treeY = y;
-    treeState.dragNode.node.style.left = x + 'px';
-    treeState.dragNode.node.style.top = y + 'px';
-    
-    drawConnections();
-}
-
-function endDragNode() {
-    if (treeState.dragNode) {
-        treeState.dragNode.node.style.zIndex = '';
-        treeState.dragNode.node.classList.remove('dragging');
-        treeState.dragNode = null;
-        saveProject();
-    }
-}
-
-function handleConnectionPoint(slideId, position) {
-    if (!treeState.connectMode) {
-        treeState.connectMode = true;
-        updateConnectModeBtn();
-    }
-    
-    if (!treeState.connectFrom) {
-        treeState.connectFrom = { slideId, position };
-        highlightConnectionStart(slideId, position);
-    } else {
-        if (treeState.connectFrom.slideId !== slideId) {
-            addConnection(
-                treeState.connectFrom.slideId, 
-                treeState.connectFrom.position,
-                slideId, 
-                position
-            );
-        }
-        clearConnectionHighlight();
-        treeState.connectFrom = null;
-    }
-}
-
-function highlightConnectionStart(slideId, position) {
-    document.querySelectorAll('.family-node').forEach(node => {
-        if (node.dataset.slideId == slideId) {
-            node.classList.add('connecting');
-            node.querySelector(`.connection-point[data-pos="${position}"]`)?.classList.add('active');
+    // Clic simple pour sélectionner
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('.scenario-socket') && !e.target.closest('.scenario-handle')) {
+            document.querySelectorAll('.scenario-slide-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
         }
     });
 }
 
-function clearConnectionHighlight() {
-    document.querySelectorAll('.connection-point.active').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.family-node.connecting').forEach(n => n.classList.remove('connecting'));
-}
-
-function addConnection(fromId, fromPos, toId, toPos) {
-    const exists = treeState.connections.some(c => 
-        c.from.slideId == fromId && c.to.slideId == toId
-    );
+/* Commencer à tracer une connexion */
+function startDrawingConnection(socketElement, slideId) {
+    const canvas = document.getElementById('treeCanvas');
+    const svg = document.getElementById('treeSvg');
+    if (!canvas || !svg) return;
     
-    if (!exists && fromId != toId) {
-        treeState.connections.push({
-            from: { slideId: fromId, position: fromPos },
-            to: { slideId: toId, position: toPos }
-        });
-        
-        drawConnections();
-        renderTreeNodes();
-        saveProject();
-    }
+    scenarioState.isDrawingLine = true;
+    scenarioState.startSocket = socketElement;
+    scenarioState.startSocketSlideId = slideId;
+    
+    const rect = socketElement.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    const x = rect.left + rect.width / 2 - canvasRect.left + canvas.scrollLeft;
+    const y = rect.top + rect.height / 2 - canvasRect.top + canvas.scrollTop;
+    
+    const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tempLine.setAttribute('stroke', '#cc6699');
+    tempLine.setAttribute('stroke-width', '3');
+    tempLine.setAttribute('fill', 'none');
+    tempLine.setAttribute('stroke-dasharray', '5,5');
+    tempLine.dataset.startX = x;
+    tempLine.dataset.startY = y;
+    
+    svg.appendChild(tempLine);
+    scenarioState.tempLine = tempLine;
 }
 
+/* Créer une connexion entre deux slides */
+function createScenarioConnection(fromId, toId) {
+    // Vérifier si la connexion existe déjà
+    const exists = scenarioState.connections.some(c => c.from == fromId && c.to == toId);
+    if (exists || fromId == toId) return;
+    
+    const connection = {
+        id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        from: fromId,
+        to: toId,
+        label: '' // Label personnalisé (vide = utilise le titre par défaut)
+    };
+    
+    scenarioState.connections.push(connection);
+    drawConnections();
+    saveProject();
+}
+
+/* Dessiner toutes les connexions */
 function drawConnections() {
     const svg = document.getElementById('treeSvg');
-    if (!svg) return;
+    const canvas = document.getElementById('treeCanvas');
+    if (!svg || !canvas) return;
     
+    // Supprimer les anciens boutons d'édition HTML
+    canvas.querySelectorAll('.connection-edit-btn-html').forEach(btn => btn.remove());
+    
+    // Garder seulement la ligne temporaire si elle existe
+    const tempLine = scenarioState.tempLine;
     svg.innerHTML = '';
+    if (tempLine) svg.appendChild(tempLine);
     
+    // Ajouter les définitions pour les flèches
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
         <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill="#cc6699"/>
         </marker>
+        <marker id="arrowhead-labeled" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#9b59b6"/>
+        </marker>
     `;
     svg.appendChild(defs);
     
-    treeState.connections.forEach((conn, index) => {
-        const fromSlide = state.slides.find(s => s.id == conn.from.slideId);
-        const toSlide = state.slides.find(s => s.id == conn.to.slideId);
+    // Dessiner chaque connexion
+    scenarioState.connections.forEach((conn, index) => {
+        const fromSlide = state.slides.find(s => s.id == conn.from);
+        const toSlide = state.slides.find(s => s.id == conn.to);
         
         if (!fromSlide || !toSlide) return;
         
-        const fromPoint = getConnectionPointCoords(fromSlide, conn.from.position);
-        const toPoint = getConnectionPointCoords(toSlide, conn.to.position);
+        const fromCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.from}"]`);
+        const toCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.to}"]`);
         
+        if (!fromCard || !toCard) return;
+        
+        // Coordonnées du socket de départ (côté droit)
+        const fromSocket = fromCard.querySelector('.scenario-socket');
+        const canvasRect = canvas.getBoundingClientRect();
+        const fromRect = fromSocket.getBoundingClientRect();
+        
+        const x1 = fromRect.left + fromRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        
+        // Coordonnées de la carte cible (côté gauche)
+        const toRect = toCard.getBoundingClientRect();
+        const x2 = toRect.left - canvasRect.left + canvas.scrollLeft;
+        const y2 = toRect.top + toRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        
+        // Créer une courbe de Bézier
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const dx = toPoint.x - fromPoint.x;
-        const dy = toPoint.y - fromPoint.y;
-        const curve = Math.min(Math.abs(dx), Math.abs(dy)) * 0.5;
-        
-        let d;
-        if (conn.from.position === 'bottom' || conn.from.position === 'top') {
-            d = `M ${fromPoint.x} ${fromPoint.y} C ${fromPoint.x} ${fromPoint.y + curve}, ${toPoint.x} ${toPoint.y - curve}, ${toPoint.x} ${toPoint.y}`;
-        } else {
-            d = `M ${fromPoint.x} ${fromPoint.y} C ${fromPoint.x + curve} ${fromPoint.y}, ${toPoint.x - curve} ${toPoint.y}, ${toPoint.x} ${toPoint.y}`;
-        }
+        const cp1x = x1 + Math.abs(x2 - x1) / 2;
+        const d = `M ${x1} ${y1} C ${cp1x} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
         
         path.setAttribute('d', d);
-        path.setAttribute('stroke', '#cc6699');
+        path.setAttribute('stroke', conn.label ? '#9b59b6' : '#cc6699'); // Couleur différente si label personnalisé
         path.setAttribute('stroke-width', '3');
         path.setAttribute('fill', 'none');
-        path.setAttribute('marker-end', 'url(#arrowhead)');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('marker-end', conn.label ? 'url(#arrowhead-labeled)' : 'url(#arrowhead)');
+        path.classList.add('scenario-connection-line');
         path.style.cursor = 'pointer';
+        path.dataset.connectionId = conn.id;
         
-        path.addEventListener('click', () => {
-            if (confirm('Supprimer cette connexion ?')) {
-                treeState.connections.splice(index, 1);
-                drawConnections();
-                renderTreeNodes();
-                saveProject();
-            }
-        });
+        // Animation fluide
+        path.setAttribute('stroke-dasharray', '8');
         
         svg.appendChild(path);
+        
+        // Calculer le point milieu pour le bouton d'édition
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        
+        // Ajouter un label texte sur la connexion si personnalisé
+        if (conn.label) {
+            const labelY = midY - 25;
+            
+            const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            const labelText = conn.label.length > 20 ? conn.label.substring(0, 20) + '...' : conn.label;
+            const textWidth = labelText.length * 7 + 16;
+            textBg.setAttribute('x', midX - textWidth / 2);
+            textBg.setAttribute('y', labelY - 12);
+            textBg.setAttribute('width', textWidth);
+            textBg.setAttribute('height', 22);
+            textBg.setAttribute('rx', 4);
+            textBg.setAttribute('fill', '#9b59b6');
+            textBg.style.pointerEvents = 'none';
+            svg.appendChild(textBg);
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', midX);
+            text.setAttribute('y', labelY + 4);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', 'white');
+            text.setAttribute('font-size', '11');
+            text.setAttribute('font-family', 'Inter, sans-serif');
+            text.setAttribute('font-weight', '500');
+            text.textContent = labelText;
+            text.style.pointerEvents = 'none';
+            svg.appendChild(text);
+        }
+        
+        // Ajouter un bouton d'édition HTML (plus fiable que SVG pour les clics)
+        const editBtn = document.createElement('div');
+        editBtn.className = 'connection-edit-btn-html';
+        editBtn.innerHTML = '✎';
+        editBtn.style.cssText = `
+            position: absolute;
+            left: ${midX - 12}px;
+            top: ${midY - 12}px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 2px solid ${conn.label ? '#9b59b6' : '#cc6699'};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            color: ${conn.label ? '#9b59b6' : '#cc6699'};
+            z-index: 100;
+            user-select: none;
+        `;
+        editBtn.dataset.connId = conn.id;
+        
+        // Clic sur le bouton d'édition
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            editConnectionLabel(conn);
+        });
+        
+        // Ajouter au canvas (pas au SVG)
+        canvas.appendChild(editBtn);
+        
+        // Variables pour détecter le clic vs le drag
+        let clickTimeout = null;
+        let hasMoved = false;
+        let startX, startY;
+        
+        // Clic sur la connexion - attendre pour voir si c'est un double-clic ou un drag
+        path.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            hasMoved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            // Fonction pour gérer le mouvement
+            const onMouseMove = (moveE) => {
+                const dx = Math.abs(moveE.clientX - startX);
+                const dy = Math.abs(moveE.clientY - startY);
+                if (dx > 5 || dy > 5) {
+                    hasMoved = true;
+                    // L'utilisateur a bougé - supprimer et redessiner
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    
+                    scenarioState.connections = scenarioState.connections.filter(c => c.id !== conn.id);
+                    path.remove();
+                    
+                    // Reprendre le tracé depuis la slide source
+                    const sourceCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.from}"]`);
+                    if (sourceCard) {
+                        const sourceSocket = sourceCard.querySelector('.scenario-socket');
+                        startDrawingConnection(sourceSocket, conn.from);
+                        
+                        // Mettre à jour la ligne temporaire
+                        const mouseX = moveE.clientX - canvasRect.left + canvas.scrollLeft;
+                        const mouseY = moveE.clientY - canvasRect.top + canvas.scrollTop;
+                        if (scenarioState.tempLine) {
+                            const lineStartX = parseFloat(scenarioState.tempLine.dataset.startX);
+                            const lineStartY = parseFloat(scenarioState.tempLine.dataset.startY);
+                            scenarioState.tempLine.setAttribute('d', `M ${lineStartX} ${lineStartY} L ${mouseX} ${mouseY}`);
+                        }
+                    }
+                    saveProject();
+                }
+            };
+            
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                // Si pas de mouvement, ne rien faire (permettre le double-clic)
+            };
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     });
 }
 
-function getConnectionPointCoords(slide, position) {
-    const nodeWidth = 180;
-    const nodeHeight = 140;
-    
-    const x = slide.treeX || 0;
-    const y = slide.treeY || 0;
-    
-    switch(position) {
-        case 'top': return { x: x + nodeWidth/2, y: y };
-        case 'right': return { x: x + nodeWidth, y: y + nodeHeight/2 };
-        case 'bottom': return { x: x + nodeWidth/2, y: y + nodeHeight };
-        case 'left': return { x: x, y: y + nodeHeight/2 };
-        default: return { x: x + nodeWidth/2, y: y + nodeHeight/2 };
-    }
-}
-
-function toggleConnectMode() {
-    treeState.connectMode = !treeState.connectMode;
-    treeState.connectFrom = null;
-    clearConnectionHighlight();
-    updateConnectModeBtn();
-}
-
-function updateConnectModeBtn() {
-    const btn = document.getElementById('connectModeBtn');
-    if (treeState.connectMode) {
-        btn.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-times"></i> Annuler';
-    } else {
-        btn.classList.remove('active');
-        btn.innerHTML = '<i class="fas fa-link"></i> Connecter';
-    }
-}
-
+/* Ajouter une slide depuis l'arborescence */
 function addSlideFromTree() {
     addSlide();
     
@@ -1595,11 +1816,11 @@ function addSlideFromTree() {
     const newSlide = state.slides[state.slides.length - 1];
     
     if (lastSlide && lastSlide.treeX !== undefined) {
-        newSlide.treeX = lastSlide.treeX + 250;
+        newSlide.treeX = lastSlide.treeX + 300;
         newSlide.treeY = lastSlide.treeY;
         
         if (newSlide.treeX > 1200) {
-            newSlide.treeX = 200;
+            newSlide.treeX = 100;
             newSlide.treeY = lastSlide.treeY + 200;
         }
     }
@@ -1608,11 +1829,12 @@ function addSlideFromTree() {
     drawConnections();
 }
 
+/* Réorganiser automatiquement les slides */
 function resetTreeLayout() {
     const cols = Math.ceil(Math.sqrt(state.slides.length * 1.5));
     state.slides.forEach((slide, index) => {
-        slide.treeX = 200 + (index % cols) * 260;
-        slide.treeY = 150 + Math.floor(index / cols) * 200;
+        slide.treeX = 100 + (index % cols) * 300;
+        slide.treeY = 100 + Math.floor(index / cols) * 200;
     });
     
     renderTreeNodes();
@@ -1620,28 +1842,153 @@ function resetTreeLayout() {
     saveProject();
 }
 
+/* Effacer toutes les connexions */
 function clearAllConnections() {
-    if (treeState.connections.length === 0) return;
+    if (scenarioState.connections.length === 0) return;
     
     if (confirm('Supprimer toutes les connexions ?')) {
-        treeState.connections = [];
+        scenarioState.connections = [];
         drawConnections();
-        renderTreeNodes();
         saveProject();
     }
 }
 
-// Sauvegarde des connexions
+/* Éditer le label d'une connexion */
+/* Éditer le label d'une connexion */
+function editConnectionLabel(conn) {
+    // Trouver la connexion dans le tableau pour être sûr d'avoir la bonne référence
+    const connectionToEdit = scenarioState.connections.find(c => c.id === conn.id);
+    if (!connectionToEdit) {
+        console.error('Connexion non trouvée:', conn.id);
+        return;
+    }
+    
+    const targetSlide = state.slides.find(s => s.id == connectionToEdit.to);
+    const targetIndex = targetSlide ? state.slides.indexOf(targetSlide) + 1 : '?';
+    const targetTitle = targetSlide ? getSlideTitle(targetSlide) : 'Inconnu';
+    const defaultLabel = `Slide ${targetIndex} - ${targetTitle}`;
+    
+    const currentLabel = connectionToEdit.label || '';
+    const newLabel = prompt(
+        `Entrez un titre personnalisé pour cette connexion :\n(Laissez vide pour utiliser "${defaultLabel}")`,
+        currentLabel
+    );
+    
+    // null = annulé, on ne fait rien
+    if (newLabel === null) return;
+    
+    // Mettre à jour le label (même si vide)
+    connectionToEdit.label = newLabel.trim();
+    drawConnections();
+    saveProject();
+}
+
+/* ============ APERÇU DU SCÉNARIO ============ */
+
+function openScenarioPreview() {
+    if (state.slides.length === 0) {
+        alert("Aucune slide à afficher !");
+        return;
+    }
+    
+    scenarioState.previewHistory = [];
+    updatePreviewBackButton();
+    
+    // Commencer par la première slide (celle la plus à gauche)
+    let firstSlide = state.slides.reduce((min, s) => 
+        (s.treeX < min.treeX) ? s : min, state.slides[0]);
+    
+    loadScenarioPreviewSlide(firstSlide.id);
+    document.getElementById('scenarioPreviewOverlay').classList.remove('hidden');
+}
+
+function loadScenarioPreviewSlide(slideId) {
+    const slide = state.slides.find(s => s.id == slideId);
+    if (!slide) return;
+    
+    const index = state.slides.indexOf(slide);
+    
+    // Titre
+    document.getElementById('scenarioPreviewTitle').innerText = `Slide ${index + 1}`;
+    
+    // Contenu - générer un aperçu basé sur les éléments
+    let bodyHtml = '';
+    slide.elements.forEach(elem => {
+        if (elem.type === 'text') {
+            bodyHtml += `<p>${elem.content}</p>`;
+        }
+    });
+    if (!bodyHtml) bodyHtml = '<p style="color:#999;">Cette slide ne contient pas de texte.</p>';
+    document.getElementById('scenarioPreviewBody').innerHTML = bodyHtml;
+    
+    // Choix - les connexions sortantes
+    const choicesContainer = document.getElementById('scenarioPreviewChoices');
+    choicesContainer.innerHTML = '';
+    
+    const outgoingConnections = scenarioState.connections.filter(c => c.from == slideId);
+    
+    if (outgoingConnections.length === 0) {
+        // Pas de connexion sortante = fin du scénario
+        const endBtn = document.createElement('button');
+        endBtn.className = 'scenario-choice-btn';
+        endBtn.innerHTML = '🔄 Recommencer';
+        endBtn.onclick = () => openScenarioPreview();
+        choicesContainer.appendChild(endBtn);
+    } else {
+        // Afficher les choix
+        outgoingConnections.forEach(conn => {
+            const targetSlide = state.slides.find(s => s.id == conn.to);
+            if (targetSlide) {
+                const targetIndex = state.slides.indexOf(targetSlide);
+                const btn = document.createElement('button');
+                btn.className = 'scenario-choice-btn';
+                btn.innerHTML = `➡️ Aller à Slide ${targetIndex + 1}`;
+                btn.onclick = () => {
+                    scenarioState.previewHistory.push(slideId);
+                    updatePreviewBackButton();
+                    loadScenarioPreviewSlide(conn.to);
+                };
+                choicesContainer.appendChild(btn);
+            }
+        });
+    }
+}
+
+function updatePreviewBackButton() {
+    const btn = document.getElementById('scenarioPreviewBack');
+    if (scenarioState.previewHistory.length > 0) {
+        btn.style.display = 'inline-flex';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function goBackInPreview() {
+    if (scenarioState.previewHistory.length > 0) {
+        const previousId = scenarioState.previewHistory.pop();
+        updatePreviewBackButton();
+        loadScenarioPreviewSlide(previousId);
+    }
+}
+
+function closeScenarioPreview() {
+    document.getElementById('scenarioPreviewOverlay').classList.add('hidden');
+}
+
+/* ============ SAUVEGARDE DES CONNEXIONS ============ */
+
+// Sauvegarder les connexions avec le projet
 const originalSaveProject = saveProject;
 saveProject = function() {
     const projectIndex = state.projectIndex;
     if (projectIndex !== null && projectIndex !== undefined) {
-        const treeData = { connections: treeState.connections };
+        const treeData = { connections: scenarioState.connections };
         localStorage.setItem('slideflow_tree_' + projectIndex, JSON.stringify(treeData));
     }
     originalSaveProject();
 };
 
+/* Charger les connexions */
 function loadConnections() {
     const projectIndex = state.projectIndex;
     if (projectIndex !== null && projectIndex !== undefined) {
@@ -1649,10 +1996,13 @@ function loadConnections() {
         if (saved) {
             try {
                 const treeData = JSON.parse(saved);
-                treeState.connections = treeData.connections || [];
+                scenarioState.connections = treeData.connections || [];
             } catch(e) {
                 console.error('Erreur chargement arborescence:', e);
+                scenarioState.connections = [];
             }
+        } else {
+            scenarioState.connections = [];
         }
     }
 }
