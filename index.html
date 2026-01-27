@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowpoint</title>
+    <title>Flowpoint - Éditeur</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
-        <!-- Barre de navigation supérieure -->
         <header class="top-bar">
             <div class="logo">
                 <a href="home.html" class="back-btn" title="Retour à l'accueil">
@@ -19,7 +18,7 @@
                 <i class="fas fa-window-restore"></i>
                 <span>Flowpoint</span>
             </div>
-            <!-- Outils de texte - visibles uniquement lors de l'édition de texte -->
+            
             <div class="toolbar text-tools" id="textTools" style="display: none;">
                 <div class="tool-group">
                     <select id="fontSelect" class="font-select">
@@ -43,34 +42,28 @@
                 </div>
                 <div class="separator"></div>
                 <div class="tool-group">
-                    <button class="tool-btn" id="boldBtn" title="Gras">
-                        <i class="fas fa-bold"></i>
-                    </button>
-                    <button class="tool-btn" id="italicBtn" title="Italique">
-                        <i class="fas fa-italic"></i>
-                    </button>
-                    <button class="tool-btn" id="underlineBtn" title="Souligné">
-                        <i class="fas fa-underline"></i>
-                    </button>
+                    <button class="tool-btn" id="boldBtn" title="Gras"><i class="fas fa-bold"></i></button>
+                    <button class="tool-btn" id="italicBtn" title="Italique"><i class="fas fa-italic"></i></button>
+                    <button class="tool-btn" id="underlineBtn" title="Souligné"><i class="fas fa-underline"></i></button>
                 </div>
                 <div class="separator"></div>
                 <div class="tool-group">
-                    <button class="tool-btn" id="alignLeftBtn" title="Aligner à gauche">
-                        <i class="fas fa-align-left"></i>
-                    </button>
-                    <button class="tool-btn" id="alignCenterBtn" title="Centrer">
-                        <i class="fas fa-align-center"></i>
-                    </button>
-                    <button class="tool-btn" id="alignRightBtn" title="Aligner à droite">
-                        <i class="fas fa-align-right"></i>
-                    </button>
+                    <button class="tool-btn" id="alignLeftBtn"><i class="fas fa-align-left"></i></button>
+                    <button class="tool-btn" id="alignCenterBtn"><i class="fas fa-align-center"></i></button>
+                    <button class="tool-btn" id="alignRightBtn"><i class="fas fa-align-right"></i></button>
                 </div>
                 <div class="separator"></div>
                 <div class="tool-group">
-                    <input type="color" id="textColorPicker" class="color-picker" value="#1e1e1e" title="Couleur du texte">
+                    <input type="color" id="textColorPicker" class="color-picker" value="#1e1e1e">
                 </div>
             </div>
+
             <div class="actions">
+                <button class="btn btn-secondary" id="saveBtn">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    Sauvegarder
+                </button>
+
                 <button class="btn btn-secondary" id="exportBtn">
                     <i class="fas fa-download"></i>
                     Exporter
@@ -83,7 +76,6 @@
         </header>
 
         <div class="main-content">
-            <!-- Panneau latéral des slides -->
             <aside class="slides-panel">
                 <div class="panel-header">
                     <h3>Diapositives</h3>
@@ -92,99 +84,45 @@
                             <i class="fas fa-plus"></i>
                         </button>
                         <div class="add-slide-dropdown" id="addSlideDropdown">
-                            <button class="dropdown-item" data-template="blank">
-                                <div class="dropdown-preview blank"></div>
-                                <span>Vierge</span>
-                            </button>
-                            <button class="dropdown-item" data-template="title">
-                                <div class="dropdown-preview title-only">
-                                    <div class="tpl-title"></div>
-                                </div>
-                                <span>Titre</span>
-                            </button>
-                            <button class="dropdown-item" data-template="titleText">
-                                <div class="dropdown-preview title-text">
-                                    <div class="tpl-title"></div>
-                                    <div class="tpl-text"></div>
-                                </div>
-                                <span>Titre + Texte</span>
-                            </button>
-                            <button class="dropdown-item" data-template="titleImage">
-                                <div class="dropdown-preview title-image">
-                                    <div class="tpl-title"></div>
-                                    <div class="tpl-image"><i class="fas fa-image"></i></div>
-                                </div>
-                                <span>Titre + Image</span>
-                            </button>
-                            <button class="dropdown-item" data-template="twoColumns">
-                                <div class="dropdown-preview two-cols">
-                                    <div class="tpl-title"></div>
-                                    <div class="tpl-cols">
-                                        <div class="tpl-col"></div>
-                                        <div class="tpl-col"></div>
-                                    </div>
-                                </div>
-                                <span>2 Colonnes</span>
-                            </button>
-                            <button class="dropdown-item" data-template="imageText">
-                                <div class="dropdown-preview img-text">
-                                    <div class="tpl-img-left"><i class="fas fa-image"></i></div>
-                                    <div class="tpl-text-right"></div>
-                                </div>
-                                <span>Image + Texte</span>
-                            </button>
+                            <button class="dropdown-item" data-template="blank"><div class="dropdown-preview blank"></div><span>Vierge</span></button>
+                            <button class="dropdown-item" data-template="title"><div class="dropdown-preview title-only"><div class="tpl-title"></div></div><span>Titre</span></button>
+                            <button class="dropdown-item" data-template="titleText"><div class="dropdown-preview title-text"><div class="tpl-title"></div><div class="tpl-text"></div></div><span>Titre + Texte</span></button>
+                            <button class="dropdown-item" data-template="titleImage"><div class="dropdown-preview title-image"><div class="tpl-title"></div><div class="tpl-image"><i class="fas fa-image"></i></div></div><span>Titre + Image</span></button>
+                            <button class="dropdown-item" data-template="twoColumns"><div class="dropdown-preview two-cols"><div class="tpl-title"></div><div class="tpl-cols"><div class="tpl-col"></div><div class="tpl-col"></div></div></div><span>2 Colonnes</span></button>
+                            <button class="dropdown-item" data-template="imageText"><div class="dropdown-preview img-text"><div class="tpl-img-left"><i class="fas fa-image"></i></div><div class="tpl-text-right"></div></div><span>Image + Texte</span></button>
                         </div>
                     </div>
                 </div>
-                <!-- Onglets de vue -->
+                
                 <div class="view-tabs">
                     <button class="view-tab active" id="listViewBtn" title="Vue liste">
-                        <i class="fas fa-list"></i>
-                        <span>Liste</span>
+                        <i class="fas fa-list"></i> <span>Liste</span>
                     </button>
-                    <button class="view-tab" id="treeFullscreenBtn" title="Vue scénario avec connexions">
-                        <i class="fas fa-project-diagram"></i>
-                        <span>Scénario</span>
+                    <button class="view-tab" id="treeFullscreenBtn" title="Vue scénario">
+                        <i class="fas fa-project-diagram"></i> <span>Scénario</span>
                     </button>
                 </div>
-                <!-- Vue liste normale -->
-                <div class="slides-list" id="slidesList">
-                    <!-- Les miniatures des slides seront ajoutées ici dynamiquement -->
-                </div>
+                
+                <div class="slides-list" id="slidesList"></div>
             </aside>
 
-            <!-- Zone d'édition principale -->
             <main class="editor-area">
                 <div class="canvas-container">
-                    <div class="slide-canvas" id="slideCanvas">
-                        <!-- Le contenu de la slide sera ajouté ici -->
-                    </div>
+                    <div class="slide-canvas" id="slideCanvas"></div>
                 </div>
                 <div class="slide-navigation">
-                    <button class="nav-btn" id="prevSlide" title="Slide précédente">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
+                    <button class="nav-btn" id="prevSlide"><i class="fas fa-chevron-left"></i></button>
                     <span class="slide-counter" id="slideCounter">1 / 1</span>
-                    <button class="nav-btn" id="nextSlide" title="Slide suivante">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+                    <button class="nav-btn" id="nextSlide"><i class="fas fa-chevron-right"></i></button>
                 </div>
-                <!-- Boutons de navigation sur le canvas -->
                 <div class="canvas-nav-arrows">
-                    <button class="canvas-arrow arrow-left" id="canvasArrowLeft" title="Aller à la slide précédente">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button class="canvas-arrow arrow-right" id="canvasArrowRight" title="Aller à la slide suivante">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
+                    <button class="canvas-arrow arrow-left" id="canvasArrowLeft"><i class="fas fa-arrow-left"></i></button>
+                    <button class="canvas-arrow arrow-right" id="canvasArrowRight"><i class="fas fa-arrow-right"></i></button>
                 </div>
             </main>
 
-            <!-- Panneau des propriétés -->
             <aside class="properties-panel" id="propertiesPanel">
-                <div class="panel-header">
-                    <h3>Propriétés</h3>
-                </div>
+                <div class="panel-header"><h3>Propriétés</h3></div>
                 <div class="properties-content" id="propertiesContent">
                     <div class="property-section">
                         <h4>Diapositive</h4>
@@ -197,22 +135,10 @@
                     <div class="property-section">
                         <h4>Ajouter un élément</h4>
                         <div class="add-elements-grid">
-                            <button class="add-element-btn" id="addTextBtnSide" title="Ajouter du texte">
-                                <i class="fas fa-font"></i>
-                                <span>Texte</span>
-                            </button>
-                            <button class="add-element-btn" id="addImageBtnSide" title="Ajouter une image">
-                                <i class="fas fa-image"></i>
-                                <span>Image</span>
-                            </button>
-                            <button class="add-element-btn" id="addShapeBtnSide" title="Ajouter une forme">
-                                <i class="fas fa-shapes"></i>
-                                <span>Forme</span>
-                            </button>
-                            <button class="add-element-btn" id="addNavLinkBtnSide" title="Lien de navigation">
-                                <i class="fas fa-link"></i>
-                                <span>Navigation</span>
-                            </button>
+                            <button class="add-element-btn" id="addTextBtnSide"><i class="fas fa-font"></i><span>Texte</span></button>
+                            <button class="add-element-btn" id="addImageBtnSide"><i class="fas fa-image"></i><span>Image</span></button>
+                            <button class="add-element-btn" id="addShapeBtnSide"><i class="fas fa-shapes"></i><span>Forme</span></button>
+                            <button class="add-element-btn" id="addNavLinkBtnSide"><i class="fas fa-link"></i><span>Navigation</span></button>
                         </div>
                     </div>
 
@@ -222,125 +148,70 @@
                             <label>Contenu</label>
                             <textarea id="elemTextContent" rows="3" placeholder="Entrez votre texte..."></textarea>
                         </div>
-                        <div class="property-row">
-                            <label>Position X</label>
-                            <input type="number" id="elemX" value="0">
-                        </div>
-                        <div class="property-row">
-                            <label>Position Y</label>
-                            <input type="number" id="elemY" value="0">
-                        </div>
-                        <div class="property-row">
-                            <label>Largeur</label>
-                            <input type="number" id="elemWidth" value="100">
-                        </div>
-                        <div class="property-row">
-                            <label>Hauteur</label>
-                            <input type="number" id="elemHeight" value="100">
-                        </div>
+                        <div class="property-row"><label>Position X</label><input type="number" id="elemX" value="0"></div>
+                        <div class="property-row"><label>Position Y</label><input type="number" id="elemY" value="0"></div>
+                        <div class="property-row"><label>Largeur</label><input type="number" id="elemWidth" value="100"></div>
+                        <div class="property-row"><label>Hauteur</label><input type="number" id="elemHeight" value="100"></div>
+                        
                         <div class="property-row navlink-row" id="navLinkRow" style="display: none;">
                             <label>Slide cible</label>
-                            <select id="targetSlideSelect">
-                                <!-- Options générées dynamiquement -->
-                            </select>
+                            <select id="targetSlideSelect"></select>
                         </div>
                         <div class="property-row navlink-row" id="navLinkLabelRow" style="display: none;">
-                            <label>Texte du lien</label>
-                            <input type="text" id="navLinkLabel" placeholder="Aller à...">
+                            <label>Texte</label>
+                            <input type="text" id="navLinkLabel">
                         </div>
                         <div class="property-row navlink-row" id="navLinkColorRow" style="display: none;">
                             <label>Couleur</label>
                             <input type="color" id="navLinkColor" value="#cc6699">
                         </div>
 
-                        <button class="btn btn-danger" id="deleteElement">
-                            <i class="fas fa-trash"></i>
-                            Supprimer
-                        </button>
+                        <button class="btn btn-danger" id="deleteElement"><i class="fas fa-trash"></i> Supprimer</button>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
 
-    <!-- Modal pour les formes -->
     <div class="modal" id="shapeModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Choisir une forme</h3>
-                <button class="close-modal" id="closeShapeModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3>Choisir une forme</h3><button class="close-modal" id="closeShapeModal">&times;</button></div>
             <div class="shapes-grid">
-                <button class="shape-option" data-shape="rectangle">
-                    <div class="shape-preview rectangle"></div>
-                    <span>Rectangle</span>
-                </button>
-                <button class="shape-option" data-shape="circle">
-                    <div class="shape-preview circle"></div>
-                    <span>Cercle</span>
-                </button>
-                <button class="shape-option" data-shape="triangle">
-                    <div class="shape-preview triangle"></div>
-                    <span>Triangle</span>
-                </button>
-                <button class="shape-option" data-shape="star">
-                    <div class="shape-preview star"></div>
-                    <span>Étoile</span>
-                </button>
-                <button class="shape-option" data-shape="arrow">
-                    <div class="shape-preview arrow"></div>
-                    <span>Flèche</span>
-                </button>
-                <button class="shape-option" data-shape="line">
-                    <div class="shape-preview line"></div>
-                    <span>Ligne</span>
-                </button>
+                <button class="shape-option" data-shape="rectangle"><div class="shape-preview rectangle"></div><span>Rectangle</span></button>
+                <button class="shape-option" data-shape="circle"><div class="shape-preview circle"></div><span>Cercle</span></button>
+                <button class="shape-option" data-shape="triangle"><div class="shape-preview triangle"></div><span>Triangle</span></button>
+                <button class="shape-option" data-shape="star"><div class="shape-preview star"></div><span>Étoile</span></button>
+                <button class="shape-option" data-shape="arrow"><div class="shape-preview arrow"></div><span>Flèche</span></button>
+                <button class="shape-option" data-shape="line"><div class="shape-preview line"></div><span>Ligne</span></button>
             </div>
         </div>
     </div>
 
-    <!-- Modal pour l'ajout d'image -->
     <div class="modal" id="imageModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Ajouter une image</h3>
-                <button class="close-modal" id="closeImageModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3>Ajouter une image</h3><button class="close-modal" id="closeImageModal">&times;</button></div>
             <div class="image-upload-area">
                 <input type="file" id="imageInput" accept="image/*" hidden>
-                <label for="imageInput" class="upload-label">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>Cliquez pour sélectionner une image</span>
-                    <span class="upload-hint">ou glissez-déposez ici</span>
-                </label>
+                <label for="imageInput" class="upload-label"><i class="fas fa-cloud-upload-alt"></i><span>Cliquez pour sélectionner</span></label>
                 <div class="url-input-group">
                     <span class="divider-text">ou</span>
-                    <input type="text" id="imageUrlInput" placeholder="Collez l'URL d'une image...">
+                    <input type="text" id="imageUrlInput" placeholder="URL de l'image...">
                     <button class="btn btn-primary" id="addImageFromUrl">Ajouter</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Mode présentation -->
     <div class="presentation-mode" id="presentationMode">
         <div class="presentation-slide" id="presentationSlide"></div>
         <div class="presentation-controls">
-            <button class="pres-nav-btn" id="presPrev">
-                <i class="fas fa-chevron-left"></i>
-            </button>
+            <button class="pres-nav-btn" id="presPrev"><i class="fas fa-chevron-left"></i></button>
             <span class="pres-counter" id="presCounter">1 / 1</span>
-            <button class="pres-nav-btn" id="presNext">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <button class="pres-exit-btn" id="presExit">
-                <i class="fas fa-times"></i>
-                Quitter
-            </button>
+            <button class="pres-nav-btn" id="presNext"><i class="fas fa-chevron-right"></i></button>
+            <button class="pres-exit-btn" id="presExit"><i class="fas fa-times"></i> Quitter</button>
         </div>
     </div>
 
-    <!-- Mode Arborescence Plein Écran - Système Scénario -->
     <div class="tree-fullscreen" id="treeFullscreen">
         <div class="tree-header">
             <div class="tree-title">
@@ -351,6 +222,11 @@
                 <button class="tree-tool-btn primary" id="addSlideTreeBtn" title="Ajouter une slide">
                     <i class="fas fa-plus"></i> Nouvelle slide
                 </button>
+                
+                <button class="tree-tool-btn" id="connectModeBtn" title="Mode connexion">
+                    <i class="fas fa-link"></i> Connecter
+                </button>
+
                 <button class="tree-tool-btn" id="resetTreeBtn" title="Réorganiser">
                     <i class="fas fa-th"></i> Réorganiser
                 </button>
@@ -366,13 +242,11 @@
             </button>
         </div>
         
-        <!-- Canvas principal avec SVG pour les connexions -->
         <div class="tree-canvas" id="treeCanvas">
             <svg class="tree-svg" id="treeSvg"></svg>
             <div class="tree-nodes" id="treeNodes"></div>
         </div>
         
-        <!-- Barre d'aide -->
         <div class="tree-help">
             <span><i class="fas fa-arrows-alt"></i> Glisser l'icône ☰ pour déplacer</span>
             <span><i class="fas fa-circle"></i> Tirer le point rose pour connecter</span>
@@ -380,7 +254,6 @@
         </div>
     </div>
 
-    <!-- Overlay d'aperçu du scénario -->
     <div id="scenarioPreviewOverlay" class="scenario-preview-overlay hidden">
         <div class="preview-header">
             <button id="scenarioPreviewBack"><i class="fas fa-arrow-left"></i> Retour</button>
@@ -393,6 +266,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

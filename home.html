@@ -3,620 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowpoint</title>
+    <title>Flowpoint - Cloud</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Segoe UI", Inter, sans-serif;
-        }
-
-
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Inter, sans-serif; }
         :root {
-            --primary: #cc6699;
-            --primary-soft: #f4c2d7;
-            --primary-dark: #b35588;
-            --background: #fff7fb;
-            --panel: #ffffff;
-            --border: #f1c7da;
-            --text-dark: #3a2a32;
-            --text-muted: #7a6a72;
+            --primary: #cc6699; --primary-soft: #f4c2d7; --primary-dark: #b35588;
+            --background: #fff7fb; --panel: #ffffff; --border: #f1c7da;
+            --text-dark: #3a2a32; --text-muted: #7a6a72;
         }
-
-        body {
-            min-height: 100vh;
-            background: var(--background);
-            color: var(--text-dark);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0;
-        }
+        body { min-height: 100vh; background: var(--background); color: var(--text-dark); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0; }
 
         /* Header */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2.5rem;
-            background: linear-gradient(135deg, var(--primary), #e58bb6);
-            border-radius: 0 0 32px 32px;
-            box-shadow: 0 10px 25px rgba(204, 102, 153, 0.25);
-            margin-bottom: 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.5rem 2.5rem; background: linear-gradient(135deg, var(--primary), #e58bb6);
+            border-radius: 0 0 32px 32px; box-shadow: 0 10px 25px rgba(204, 102, 153, 0.25); margin-bottom: 40px;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 26px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .logo i {
-            color: white;
-            font-size: 30px;
-        }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; color: white; }
+        .user-menu { display: flex; align-items: center; gap: 15px; }
+        .user-email { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
+        .btn-logout { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
 
         .new-project-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            background: white;
-            color: var(--primary);
-            border: none;
-            border-radius: 999px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 10px; padding: 12px 24px;
+            background: white; color: var(--primary); border: none; border-radius: 999px;
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
         }
+        .new-project-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4); }
 
-        .new-project-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
-            background: #fff7fb;
-        }
+        /* Grid */
+        .section { padding: 0 2.5rem 2.5rem; }
+        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 25px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
 
-        /* Section */
-        .section {
-            padding: 0 2.5rem 2.5rem;
-        }
-
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 25px;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .section-title i {
-            color: var(--primary);
-            margin-right: 10px;
-        }
-
-        /* Grille des projets */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-        }
-
-        /* Carte de projet */
+        /* Carte Projet */
         .project-card {
-            background: var(--panel);
-            border-radius: 24px;
-            overflow: hidden;
-            border: 2px solid var(--border);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(204, 102, 153, 0.1);
+            background: var(--panel); border-radius: 24px; overflow: hidden;
+            border: 2px solid var(--border); transition: all 0.3s ease; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(204, 102, 153, 0.1); position: relative;
         }
-
-        .project-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 12px 30px rgba(204, 102, 153, 0.2);
-        }
-
+        .project-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 12px 30px rgba(204, 102, 153, 0.2); }
+        
         .project-thumbnail {
-            width: 100%;
-            height: 160px;
-            background: linear-gradient(145deg, #ffffff, var(--primary-soft));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 160px; background: #eee;
+            display: flex; align-items: center; justify-content: center;
         }
-
-        .project-thumbnail-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .project-info {
-            padding: 18px 20px;
-            background: var(--primary-soft);
-            border-radius: 16px;
-            margin: 12px;
-        }
-
-        .project-name {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--primary);
-        }
-
-        .project-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .project-slides {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .project-actions {
-            display: flex;
-            gap: 10px;
-            padding: 0 12px 12px;
-        }
-
+        .project-info { padding: 18px 20px; background: var(--primary-soft); border-radius: 16px; margin: 12px; }
+        .project-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; color: var(--primary); }
+        .project-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+        
+        .project-actions { display: flex; gap: 10px; padding: 0 12px 12px; }
         .project-action-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            flex: 1; padding: 10px; border: none; border-radius: 999px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
         }
+        .btn-open { background: var(--primary); color: white; }
+        .btn-delete { background: #fce4ec; color: #c62828; }
 
-        .btn-open {
-            background: var(--primary);
-            color: white;
+        /* Auth Modal */
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(58, 42, 50, 0.8); z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
         }
-
-        .btn-open:hover {
-            background: var(--primary-dark);
-            transform: translateX(2px);
+        .auth-box {
+            background: white; padding: 40px; border-radius: 24px; width: 100%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
-
-        .btn-delete {
-            background: #fce4ec;
-            color: #c62828;
+        .auth-box h2 { color: var(--primary); margin-bottom: 20px; }
+        .auth-input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border);
+            border-radius: 12px; font-size: 16px; outline: none;
         }
-
-        .btn-delete:hover {
-            background: #ffcdd2;
+        .auth-input:focus { border-color: var(--primary); }
+        .auth-btn {
+            width: 100%; padding: 12px; background: var(--primary); color: white; border: none;
+            border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px;
         }
+        .auth-btn:hover { background: var(--primary-dark); }
+        .auth-toggle { color: var(--text-muted); font-size: 14px; cursor: pointer; text-decoration: underline; }
+        .auth-error { color: red; font-size: 14px; margin-bottom: 10px; display: none; }
 
-        /* État vide */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 80px 20px;
-            background: var(--panel);
-            border-radius: 24px;
-            border: 2px dashed var(--border);
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            color: var(--primary-soft);
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 22px;
-            margin-bottom: 10px;
-            color: var(--text-dark);
-        }
-
-        .empty-state p {
-            color: var(--text-muted);
-            margin-bottom: 30px;
-        }
-
-        /* Modal pour nommer le projet */
+        /* New Project Modal */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(58, 42, 50, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-box {
-            background: var(--panel);
-            border-radius: 24px;
-            padding: 30px;
-            width: 100%;
-            max-width: 420px;
-            border: 2px solid var(--border);
-            box-shadow: 0 20px 50px rgba(204, 102, 153, 0.3);
-        }
-
-        .modal-box h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .modal-box input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--background);
-            border: 2px solid var(--border);
-            border-radius: 999px;
-            color: var(--text-dark);
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-
-        .modal-box input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .modal-box input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-buttons button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 999px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-cancel {
-            background: var(--background);
-            color: var(--text-muted);
-            border: 2px solid var(--border);
-        }
-
-        .btn-cancel:hover {
-            background: var(--border);
-            color: var(--text-dark);
-        }
-
-        .btn-create {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-create:hover {
-            background: var(--primary-dark);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .projects-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 640px) {
-            .projects-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 20px;
-            }
-        }
-
-        /* Footer */
-        .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2.5rem;
-            background: var(--panel);
-            border-top: 1px solid var(--border);
-            margin-top: 40px;
-            font-size: 13px;
-        }
-
-        .footer-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .footer-left strong {
-            color: var(--primary);
-        }
-
-        .footer-muted {
-            color: var(--text-muted);
-        }
-
-        .footer-center {
-            display: flex;
-            gap: 20px;
-        }
-
-        .footer-center a {
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-
-        .footer-center a:hover {
-            color: var(--primary);
-        }
-
-        .footer-right {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        @media (max-width: 640px) {
-            .footer {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-        }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; padding: 30px; border-radius: 24px; width: 400px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .empty-state { text-align: center; padding: 50px; grid-column: 1 / -1; color: var(--text-muted); }
     </style>
 </head>
 <body>
+
+    <div id="authModal" class="auth-overlay">
+        <div class="auth-box">
+            <h2 id="authTitle">Connexion</h2>
+            <div id="authError" class="auth-error"></div>
+            <input type="email" id="authEmail" class="auth-input" placeholder="Email">
+            <input type="password" id="authPassword" class="auth-input" placeholder="Mot de passe">
+            <button id="authSubmitBtn" class="auth-btn">Se connecter</button>
+            <div class="auth-toggle" id="toggleAuthMode">Pas encore de compte ? S'inscrire</div>
+        </div>
+    </div>
+
     <div class="container">
         <header class="header">
             <div class="logo">
                 <i class="fas fa-layer-group"></i>
                 <span>Flowpoint</span>
             </div>
-            <div style="display: flex; gap: 12px;">
+            <div class="user-menu" id="userMenu" style="display: none;">
+                <span class="user-email" id="displayEmail">user@email.com</span>
                 <button class="new-project-btn" id="newProjectBtn">
-                    <i class="fas fa-plus"></i>
-                    Nouvelle Présentation
+                    <i class="fas fa-plus"></i> Nouveau
                 </button>
+                <button class="btn-logout" id="btnLogout"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
         <section class="section">
-            <h2 class="section-title">
-                <i class="fas fa-folder-open"></i>
-                Mes Présentations
-            </h2>
+            <h2 class="section-title"><i class="fas fa-cloud"></i> Mes Présentations Cloud</h2>
             <div class="projects-grid" id="projectsGrid">
-                <!-- Les projets seront ajoutés ici dynamiquement -->
+                <div class="empty-state">Chargement...</div>
             </div>
         </section>
-
-        <footer class="footer">
-            <div class="footer-left">
-                © 2026 <strong>Flowpoint</strong>
-                <span class="footer-muted">v1.0.0</span>
-            </div>
-            <div class="footer-center">
-                <a href="about.html">À propos</a>
-                <a href="#">Aide</a>
-                <a href="#">Feedback</a>
-            </div>
-            <div class="footer-right footer-muted">
-                <i class="fas fa-database"></i>
-                Données stockées localement
-            </div>
-        </footer>
     </div>
 
-    <!-- Modal pour créer un nouveau projet -->
     <div class="modal-overlay" id="newProjectModal">
         <div class="modal-box">
-            <h3>Nouvelle Présentation</h3>
-            <input type="text" id="projectNameInput" placeholder="Nom de la présentation..." autofocus>
+            <h3 style="color:var(--primary); margin-bottom:15px;">Nouvelle Présentation</h3>
+            <input type="text" id="projectNameInput" class="auth-input" placeholder="Nom du projet..." autofocus>
             <div class="modal-buttons">
-                <button class="btn-cancel" id="cancelBtn">Annuler</button>
-                <button class="btn-create" id="createBtn">Créer</button>
+                <button class="project-action-btn" style="background:#eee; color:#333;" id="cancelProjectBtn">Annuler</button>
+                <button class="project-action-btn btn-open" id="createProjectBtn">Créer</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Gestion du stockage local
-        function getProjects() {
-            const projects = localStorage.getItem('slideflow_projects');
-            return projects ? JSON.parse(projects) : [];
-        }
+    <script type="module">
+        // ATTENTION : Si database.js est à côté de home.html, utilise './database.js'
+        // Si c'est dans un dossier js, utilise './js/database.js'
+        import { connexion, inscription, deconnexion, surveillerSession, sauvegarderProjet, recupererMesProjets, supprimerProjetCloud } from './database.js';
 
-        function saveProjects(projects) {
-            localStorage.setItem('slideflow_projects', JSON.stringify(projects));
-        }
+        let currentUser = null;
+        let isLoginMode = true;
 
-        function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            });
-        }
+        // --- AUTHENTIFICATION ---
+        const authModal = document.getElementById('authModal');
+        const userMenu = document.getElementById('userMenu');
+        const displayEmail = document.getElementById('displayEmail');
+        const authError = document.getElementById('authError');
 
-        // Afficher les projets
-        function renderProjects() {
+        // Toggle Connexion / Inscription
+        document.getElementById('toggleAuthMode').addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').innerText = isLoginMode ? 'Connexion' : 'Inscription';
+            document.getElementById('authSubmitBtn').innerText = isLoginMode ? 'Se connecter' : "S'inscrire";
+            document.getElementById('toggleAuthMode').innerText = isLoginMode ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter";
+            authError.style.display = 'none';
+        });
+
+        // Soumettre Auth
+        document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value;
+            const pass = document.getElementById('authPassword').value;
+            
+            try {
+                if(isLoginMode) await connexion(email, pass);
+                else await inscription(email, pass);
+            } catch (e) {
+                authError.innerText = e.message;
+                authError.style.display = 'block';
+            }
+        });
+
+        // Déconnexion
+        document.getElementById('btnLogout').addEventListener('click', deconnexion);
+
+        // Surveillance Session
+        surveillerSession(async (user) => {
+            currentUser = user;
+            if (user) {
+                authModal.style.display = 'none';
+                userMenu.style.display = 'flex';
+                displayEmail.innerText = user.email;
+                await refreshProjects();
+            } else {
+                authModal.style.display = 'flex';
+                userMenu.style.display = 'none';
+                document.getElementById('projectsGrid').innerHTML = '';
+            }
+        });
+
+        // --- GESTION PROJETS ---
+        async function refreshProjects() {
             const grid = document.getElementById('projectsGrid');
-            const projects = getProjects();
+            grid.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+            
+            try {
+                const projects = await recupererMesProjets();
+                
+                if (projects.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-folder-open" style="font-size:40px; margin-bottom:15px;"></i>
+                            <p>Aucun projet dans le cloud.</p>
+                        </div>`;
+                    return;
+                }
 
-            if (projects.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-presentation"></i>
-                        <h3>Aucune présentation</h3>
-                        <p>Créez votre première présentation pour commencer</p>
-                        <button class="new-project-btn" onclick="openNewProjectModal()">
-                            <i class="fas fa-plus"></i>
-                            Créer une présentation
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = projects.map((project, index) => `
-                <div class="project-card">
-                    <div class="project-thumbnail" style="background-color: ${project.slides[0]?.backgroundColor || '#ffffff'}">
-                        <div class="project-thumbnail-content">
-                            ${getFirstSlidePreview(project)}
+                grid.innerHTML = projects.map(p => `
+                    <div class="project-card">
+                        <div class="project-thumbnail" style="background:${p.slides && p.slides[0] ? p.slides[0].backgroundColor : '#fff'}">
+                            <span style="color:#888; font-size:12px;">Aperçu</span>
+                        </div>
+                        <div class="project-info">
+                            <div class="project-name">${p.name || 'Sans titre'}</div>
+                            <div class="project-meta">
+                                <span><i class="fas fa-layer-group"></i> ${p.slides ? p.slides.length : 0}</span>
+                                <span>${new Date(p.updatedAt).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="project-action-btn btn-open" data-name="${p.name}">Ouvrir</button>
+                            <button class="project-action-btn btn-delete" data-id="${p.firebaseId}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div class="project-info">
-                        <div class="project-name">${project.name}</div>
-                        <div class="project-meta">
-                            <span class="project-slides">
-                                <i class="fas fa-images"></i>
-                                ${project.slides.length} diapositive${project.slides.length > 1 ? 's' : ''}
-                            </span>
-                            <span>${formatDate(project.updatedAt)}</span>
-                        </div>
-                    </div>
-                    <div class="project-actions">
-                        <button class="project-action-btn btn-open" onclick="openProject(${index})">
-                            <i class="fas fa-edit"></i>
-                            Ouvrir
-                        </button>
-                        <button class="project-action-btn btn-delete" onclick="deleteProject(${index}, event)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+                `).join('');
 
-        function getFirstSlidePreview(project) {
-            if (!project.slides || project.slides.length === 0) {
-                return '<span style="color:#999;">Vide</span>';
-            }
-            const firstSlide = project.slides[0];
-            const textElement = firstSlide.elements.find(el => el.type === 'text');
-            if (textElement) {
-                const text = textElement.content.replace(/<[^>]*>/g, '').substring(0, 50);
-                return `<span style="color:#333;font-size:12px;padding:10px;">${text}${text.length >= 50 ? '...' : ''}</span>`;
-            }
-            return '<span style="color:#999;">Vide</span>';
-        }
+                // Events boutons
+                document.querySelectorAll('.btn-open').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        localStorage.setItem('current_project_name', e.currentTarget.dataset.name);
+                        window.location.href = 'index.html';
+                    });
+                });
 
-        // Ouvrir un projet
-        function openProject(index) {
-            localStorage.setItem('slideflow_current_project', index);
-            window.location.href = 'index.html';
-        }
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if(confirm("Supprimer ce projet du Cloud ?")) {
+                            await supprimerProjetCloud(e.currentTarget.dataset.id);
+                            refreshProjects();
+                        }
+                    });
+                });
 
-        // Supprimer un projet
-        function deleteProject(index, event) {
-            event.stopPropagation();
-            if (confirm('Voulez-vous vraiment supprimer cette présentation ?')) {
-                const projects = getProjects();
-                projects.splice(index, 1);
-                saveProjects(projects);
-                renderProjects();
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div class="empty-state" style="color:red">Erreur chargement</div>';
             }
         }
 
-        // Modal nouveau projet
+        // --- NOUVEAU PROJET ---
         const modal = document.getElementById('newProjectModal');
-        const nameInput = document.getElementById('projectNameInput');
-
-        function openNewProjectModal() {
-            modal.classList.add('active');
-            nameInput.value = '';
-            nameInput.focus();
-        }
-
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        function createNewProject() {
-            const name = nameInput.value.trim() || 'Présentation sans titre';
-            const projects = getProjects();
+        document.getElementById('newProjectBtn').addEventListener('click', () => modal.classList.add('active'));
+        document.getElementById('cancelProjectBtn').addEventListener('click', () => modal.classList.remove('active'));
+        
+        document.getElementById('createProjectBtn').addEventListener('click', async () => {
+            const name = document.getElementById('projectNameInput').value.trim();
+            if(!name) return;
             
             const newProject = {
                 name: name,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
-                slides: [{
-                    id: Date.now(),
-                    backgroundColor: '#ffffff',
-                    elements: []
-                }]
+                slides: [{ id: Date.now(), backgroundColor: '#ffffff', elements: [] }],
+                connections: [] // Important pour ton système de scénario !
             };
 
-            projects.push(newProject);
-            saveProjects(projects);
-            
-            // Ouvrir le nouveau projet
-            localStorage.setItem('slideflow_current_project', projects.length - 1);
-            window.location.href = 'index.html';
-        }
-
-        // Event listeners
-        document.getElementById('newProjectBtn').addEventListener('click', openNewProjectModal);
-        document.getElementById('cancelBtn').addEventListener('click', closeModal);
-        document.getElementById('createBtn').addEventListener('click', createNewProject);
-
-        nameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') createNewProject();
-            if (e.key === 'Escape') closeModal();
+            try {
+                await sauvegarderProjet(name, newProject);
+                modal.classList.remove('active');
+                refreshProjects();
+            } catch(e) {
+                alert("Erreur création: " + e.message);
+            }
         });
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-
-        // Initialisation
-        renderProjects();
     </script>
 </body>
 </html>
