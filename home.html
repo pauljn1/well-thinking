@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowpoint - Mes Présentations</title>
+    <title>Flowpoint</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -354,6 +354,60 @@
                 gap: 20px;
             }
         }
+
+        /* Footer */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2.5rem;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            font-size: 13px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-left strong {
+            color: var(--primary);
+        }
+
+        .footer-muted {
+            color: var(--text-muted);
+        }
+
+        .footer-center {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-center a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .footer-center a:hover {
+            color: var(--primary);
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 640px) {
+            .footer {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -378,6 +432,22 @@
                 <!-- Les projets seront ajoutés ici dynamiquement -->
             </div>
         </section>
+
+        <footer class="footer">
+            <div class="footer-left">
+                © 2026 <strong>Flowpoint</strong>
+                <span class="footer-muted">v1.0.0</span>
+            </div>
+            <div class="footer-center">
+                <a href="about.html">À propos</a>
+                <a href="#">Aide</a>
+                <a href="#">Feedback</a>
+            </div>
+            <div class="footer-right footer-muted">
+                <i class="fas fa-database"></i>
+                Données stockées localement
+            </div>
+        </footer>
     </div>
 
     <!-- Modal pour créer un nouveau projet -->
