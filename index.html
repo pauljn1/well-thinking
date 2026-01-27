@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADELIE LA BOSS – PowerPoint Builder</title>
+    <title>ADELIE LA BOSS – Scénario Builder</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -41,6 +41,10 @@
     </aside>
 
     <section id="canvas-container">
+        
+        <svg id="svg-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; overflow:visible;">
+            </svg>
+
         <div id="canvas-actions">
             <button id="btn-add"><i class="fa-solid fa-plus"></i> Nouvelle</button>
             <button id="btn-duplicate"><i class="fa-solid fa-copy"></i> Dupliquer</button>
@@ -49,34 +53,23 @@
             <button id="btn-clear-all" class="danger-btn"><i class="fa-solid fa-eraser"></i> Tout vider</button>
         </div>
 
-        <div class="slide" style="top:120px; left:120px;">
-            <div class="slide-header">
-                <span contenteditable="true">Slide 1</span>
-                <i class="fa-solid fa-grip-lines handle"></i>
-            </div>
-            <div class="slide-body" contenteditable="true">
-                <h3>Titre de la présentation</h3>
-                <p>Bienvenue ! Cliquez ici pour écrire...</p>
-            </div>
-        </div>
-    </section>
+        </section>
+
 </main>
 
 <div id="preview-overlay" class="hidden">
     <button id="close-preview"><i class="fa-solid fa-xmark"></i> Quitter</button>
     
     <div id="preview-card">
-        <h2 id="p-title">Titre</h2>
-        <div id="p-body">Contenu</div>
-    </div>
-
-    <div class="preview-controls">
-        <button id="prev-slide"><i class="fa-solid fa-chevron-left"></i></button>
-        <span id="slide-indicator">1 / 5</span>
-        <button id="next-slide"><i class="fa-solid fa-chevron-right"></i></button>
+        <h2 id="p-title">Titre de la slide</h2>
+        <div id="p-body">Contenu...</div>
+        
+        <div id="p-choices" style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+            </div>
     </div>
 </div>
 
 <script src="src/main.js"></script>
+
 </body>
 </html>
