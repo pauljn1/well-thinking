@@ -226,25 +226,178 @@
             gap: 6px;
         }
 
-        /* Responsive */
-        @media (max-width: 640px) {
+        /* =============================================
+           RESPONSIVE DESIGN - ABOUT
+        ============================================= */
+        
+        /* Medium screens */
+        @media (max-width: 768px) {
             .header {
                 flex-direction: column;
                 gap: 15px;
+                padding: 1rem 1.5rem;
+            }
+            
+            .logo {
+                font-size: 22px;
+            }
+            
+            .logo i {
+                font-size: 26px;
+            }
+            
+            .back-btn {
+                padding: 8px 16px;
+                font-size: 13px;
             }
 
             .page-title {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
+            }
+            
+            .page-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 30px;
             }
 
             .section {
                 padding: 20px;
+                border-radius: 10px;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+            }
+            
+            .section p {
+                font-size: 0.95rem;
+            }
+            
+            .team-group {
+                padding: 12px;
+            }
+            
+            .team-group-title {
+                font-size: 0.9rem;
+            }
+            
+            .member {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+            
+            .tech-badges {
+                gap: 6px;
+            }
+            
+            .tech-badge {
+                font-size: 12px;
+                padding: 5px 10px;
             }
 
             .footer {
                 flex-direction: column;
                 gap: 12px;
                 text-align: center;
+                padding: 1rem;
+            }
+            
+            .footer-center {
+                gap: 15px;
+            }
+        }
+        
+        /* Small screens */
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.8rem 1rem;
+            }
+            
+            .logo {
+                font-size: 18px;
+                gap: 8px;
+            }
+            
+            .logo i {
+                font-size: 22px;
+            }
+            
+            .back-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .container {
+                padding: 0 12px;
+            }
+            
+            .page-title {
+                font-size: 1.4rem;
+            }
+            
+            .page-subtitle {
+                font-size: 0.85rem;
+                margin-bottom: 25px;
+            }
+            
+            .section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .section-title {
+                font-size: 0.95rem;
+                gap: 8px;
+            }
+            
+            .section p {
+                font-size: 0.9rem;
+                line-height: 1.6;
+                text-align: left;
+            }
+            
+            .team-grid {
+                gap: 12px;
+            }
+            
+            .team-group {
+                padding: 10px;
+            }
+            
+            .team-group-title {
+                font-size: 0.85rem;
+                gap: 6px;
+            }
+            
+            .team-members {
+                gap: 6px;
+            }
+            
+            .member {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+            
+            .tech-badges {
+                gap: 5px;
+                margin-top: 12px;
+            }
+            
+            .tech-badge {
+                font-size: 11px;
+                padding: 4px 8px;
+                gap: 4px;
+            }
+            
+            .footer {
+                padding: 0.8rem;
+                font-size: 12px;
+                gap: 10px;
+            }
+            
+            .footer-center {
+                flex-wrap: wrap;
+                gap: 10px;
             }
         }
     </style>

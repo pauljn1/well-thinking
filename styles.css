@@ -1775,28 +1775,294 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
     box-shadow: 0 6px 12px rgba(204, 102, 153, 0.3);
 }
 
-/* RESPONSIVE */
+/* =============================================
+   RESPONSIVE DESIGN
+============================================= */
+
+/* Large screens (1400px and below) */
 @media (max-width: 1400px) {
     .tree-toolbar { gap: 6px; }
     .toolbar-group { padding: 3px 6px; }
     .tree-tool-btn { padding: 6px 10px; font-size: 11px; }
 }
 
+/* Medium-large screens (1200px and below) */
 @media (max-width: 1200px) { 
     .properties-panel { width: 240px; } 
     .slide-canvas { width: 800px; height: 450px; }
     .tree-search input { width: 80px; }
+    
+    .toolbar {
+        gap: 4px;
+        padding: 4px 10px;
+    }
+    
+    .tool-group {
+        gap: 2px;
+    }
+    
+    .font-select {
+        width: 100px;
+    }
+    
+    .actions {
+        gap: 6px;
+    }
+    
+    .btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
 }
 
+/* Medium screens (1024px and below) */
 @media (max-width: 1024px) { 
     .slides-panel { width: 180px; } 
     .properties-panel { display: none; } 
     .slide-canvas { width: 640px; height: 360px; }
     .tree-minimap { display: none; }
     .tree-help { font-size: 10px; gap: 10px; }
+    
+    .top-bar {
+        padding: 0.6rem 1rem;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .toolbar {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 5px;
+    }
+    
+    .canvas-container {
+        padding: 20px;
+    }
+    
+    .canvas-nav-arrows {
+        padding: 0 10px;
+    }
+    
+    .canvas-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
 }
 
+/* Tablet screens (768px and below) */
 @media (max-width: 768px) {
+    body {
+        overflow: auto;
+    }
+    
+    .app-container {
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .top-bar {
+        padding: 0.5rem;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .logo {
+        font-size: 16px;
+    }
+    
+    .logo i {
+        font-size: 18px;
+    }
+    
+    .toolbar {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px;
+        border-radius: var(--radius-md);
+    }
+    
+    .separator {
+        display: none;
+    }
+    
+    .tool-group {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .font-select, .font-size-select {
+        width: auto;
+        min-width: 60px;
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .tool-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .actions {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .btn span {
+        display: none;
+    }
+    
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .slides-panel {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .slides-list {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .slide-thumbnail {
+        min-width: 120px;
+        flex-shrink: 0;
+    }
+    
+    .view-tabs {
+        padding: 6px;
+    }
+    
+    .view-tab {
+        padding: 6px;
+        font-size: 12px;
+    }
+    
+    .view-tab span {
+        display: none;
+    }
+    
+    .editor-area {
+        min-height: 60vh;
+    }
+    
+    .canvas-container {
+        padding: 15px;
+        overflow: auto;
+    }
+    
+    .slide-canvas {
+        width: 100%;
+        max-width: 480px;
+        height: auto;
+        aspect-ratio: 16/9;
+        min-height: 270px;
+    }
+    
+    .slide-navigation {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .nav-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .slide-counter {
+        font-size: 12px;
+    }
+    
+    .canvas-nav-arrows {
+        display: none;
+    }
+    
+    /* Modal responsive */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .shapes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .shape-option {
+        padding: 12px;
+    }
+    
+    .shape-preview {
+        width: 30px;
+        height: 30px;
+    }
+    
+    /* Presentation mode responsive */
+    .presentation-slide {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+    }
+    
+    .presentation-controls {
+        padding: 10px;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pres-nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Tree view responsive */
+    .tree-fullscreen .tree-header {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .tree-toolbar {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .tree-tool-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .tree-tool-btn span {
+        display: none;
+    }
+    
+    .tree-help {
+        display: none;
+    }
+    
+    /* Scenario cards */
     .scenario-slide-card {
         width: 200px;
         min-height: 120px;
@@ -1813,6 +2079,142 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
     
     #scenarioPreviewBody {
         font-size: 1.1rem;
+    }
+    
+    /* Dropdown responsive */
+    .add-slide-dropdown {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+/* Small screens (480px and below) */
+@media (max-width: 480px) {
+    .top-bar {
+        padding: 8px;
+    }
+    
+    .logo {
+        font-size: 14px;
+        gap: 6px;
+    }
+    
+    .logo .back-btn {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .toolbar {
+        padding: 6px;
+    }
+    
+    .tool-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .font-select, .font-size-select {
+        min-width: 50px;
+        font-size: 11px;
+    }
+    
+    .color-picker {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 4px;
+    }
+    
+    .btn i {
+        font-size: 12px;
+    }
+    
+    .slides-panel {
+        max-height: 150px;
+    }
+    
+    .slide-thumbnail {
+        min-width: 100px;
+    }
+    
+    .panel-header {
+        padding: 10px 12px;
+    }
+    
+    .panel-header h3 {
+        font-size: 11px;
+    }
+    
+    .add-slide-btn {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .slide-canvas {
+        max-width: 320px;
+        min-height: 180px;
+    }
+    
+    .slide-navigation {
+        padding: 8px;
+    }
+    
+    .nav-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    /* Modal small screen */
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .close-modal {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+    
+    .shapes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Tree view small screen */
+    .tree-title span {
+        display: none;
+    }
+    
+    .tree-close-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    /* Scenario preview */
+    .preview-card {
+        padding: 1.5rem;
+    }
+    
+    #scenarioPreviewTitle {
+        font-size: 1.4rem;
+    }
+    
+    #scenarioPreviewBody {
+        font-size: 1rem;
+    }
+    
+    .scenario-choice-btn {
+        padding: 10px 16px;
+        font-size: 13px;
     }
 }
 

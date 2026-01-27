@@ -98,6 +98,237 @@
         .modal-box { background: white; padding: 30px; border-radius: 24px; width: 400px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .empty-state { text-align: center; padding: 50px; grid-column: 1 / -1; color: var(--text-muted); }
+
+        /* =============================================
+           RESPONSIVE DESIGN - HOME
+        ============================================= */
+        
+        /* Medium screens */
+        @media (max-width: 1024px) {
+            .header {
+                padding: 1rem 1.5rem;
+                border-radius: 0 0 24px 24px;
+            }
+            
+            .logo {
+                font-size: 22px;
+            }
+            
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                gap: 20px;
+            }
+        }
+        
+        /* Tablet screens */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 1rem;
+                border-radius: 0 0 20px 20px;
+                margin-bottom: 25px;
+            }
+            
+            .logo {
+                font-size: 20px;
+            }
+            
+            .user-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .user-email {
+                font-size: 12px;
+                order: 3;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .new-project-btn {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+            
+            .section {
+                padding: 0 1rem 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+            }
+            
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 15px;
+            }
+            
+            .project-card {
+                border-radius: 18px;
+            }
+            
+            .project-thumbnail {
+                height: 130px;
+            }
+            
+            .project-info {
+                padding: 14px 16px;
+                margin: 10px;
+            }
+            
+            .project-name {
+                font-size: 15px;
+            }
+            
+            /* Auth modal responsive */
+            .auth-box {
+                width: 90%;
+                padding: 30px 25px;
+            }
+            
+            .auth-box h2 {
+                font-size: 1.4rem;
+            }
+            
+            .auth-input {
+                padding: 10px;
+                font-size: 15px;
+            }
+            
+            .auth-btn {
+                padding: 10px;
+                font-size: 15px;
+            }
+            
+            /* New project modal responsive */
+            .modal-box {
+                width: 90%;
+                padding: 25px;
+            }
+        }
+        
+        /* Small screens */
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.8rem;
+                margin-bottom: 20px;
+            }
+            
+            .logo {
+                font-size: 18px;
+                gap: 8px;
+            }
+            
+            .logo i {
+                font-size: 20px;
+            }
+            
+            .user-menu {
+                gap: 8px;
+            }
+            
+            .new-project-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            
+            .btn-logout {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .section {
+                padding: 0 0.8rem 1rem;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .project-card {
+                border-radius: 16px;
+            }
+            
+            .project-thumbnail {
+                height: 120px;
+            }
+            
+            .project-info {
+                padding: 12px 14px;
+                margin: 8px;
+                border-radius: 12px;
+            }
+            
+            .project-name {
+                font-size: 14px;
+            }
+            
+            .project-meta {
+                font-size: 11px;
+            }
+            
+            .project-actions {
+                padding: 0 8px 8px;
+                gap: 8px;
+            }
+            
+            .project-action-btn {
+                padding: 8px;
+                font-size: 12px;
+            }
+            
+            .empty-state {
+                padding: 30px;
+                font-size: 14px;
+            }
+            
+            /* Auth modal small screen */
+            .auth-box {
+                padding: 25px 20px;
+            }
+            
+            .auth-box h2 {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            
+            .auth-input {
+                padding: 10px;
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            
+            .auth-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .auth-toggle {
+                font-size: 13px;
+            }
+            
+            /* Modal small screen */
+            .modal-box {
+                padding: 20px;
+            }
+            
+            .modal-box h3 {
+                font-size: 1rem;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
     </style>
 </head>
 <body>
