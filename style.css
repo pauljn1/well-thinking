@@ -1,11 +1,16 @@
+<<<<<<< HEAD
 /* =========================================
    1. RESET & VARIABLES
 ========================================= */
+=======
+/* RESET */
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Segoe UI", Inter, sans-serif;
+<<<<<<< HEAD
     user-select: none; /* Empêche la sélection de texte involontaire (sauf inputs) */
 }
 
@@ -22,10 +27,25 @@
 /* =========================================
    2. LAYOUT GÉNÉRAL (Body, Header, Main)
 ========================================= */
+=======
+}
+
+/* VARIABLES */
+:root {
+    --primary: #cc6699;
+    --primary-soft: #f4c2d7;
+    --background: #fff7fb;
+    --panel: #ffffff;
+    --border: #f1c7da;
+}
+
+/* BODY */
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
 body {
     min-height: 100vh;
     background: var(--background);
     color: #3a2a32;
+<<<<<<< HEAD
     overflow: hidden; /* Pas de scroll global */
     display: flex;
     flex-direction: column;
@@ -39,10 +59,21 @@ header {
     align-items: center;
     box-shadow: 0 4px 15px rgba(204, 102, 153, 0.2);
     z-index: 10;
+=======
+}
+
+/* HEADER */
+header {
+    background: linear-gradient(135deg, var(--primary), #e58bb6);
+    padding: 1.2rem 2rem;
+    border-radius: 0 0 32px 32px;
+    box-shadow: 0 10px 25px rgba(204, 102, 153, 0.25);
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
 }
 
 header h1 {
     color: white;
+<<<<<<< HEAD
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -74,6 +105,35 @@ main {
 .tool-title {
     font-size: 0.8rem;
     font-weight: 800;
+=======
+    font-size: 1.6rem;
+}
+
+/* LAYOUT */
+main {
+    display: flex;
+    height: calc(100vh - 96px);
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* TOOLBAR */
+#toolbar {
+    width: 260px;
+    background: var(--panel);
+    border-radius: 28px;
+    padding: 1.2rem;
+    border: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* TOOLBAR BUTTONS */
+.tool-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
     color: var(--primary);
     text-transform: uppercase;
     margin-bottom: 0.5rem;
@@ -82,6 +142,7 @@ main {
 .tool-btn {
     display: flex;
     align-items: center;
+<<<<<<< HEAD
     gap: 1rem;
     padding: 0.8rem 1rem;
     border-radius: 12px;
@@ -89,10 +150,19 @@ main {
     background: transparent;
     font-weight: 600;
     color: #555;
+=======
+    gap: 0.8rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: #fff;
+    font-weight: 600;
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
+<<<<<<< HEAD
 .tool-btn i { color: var(--primary); font-size: 1.1rem; }
 
 .tool-btn:hover {
@@ -379,3 +449,98 @@ path.connection-line:hover {
     from { transform: scale(0.9); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+=======
+.tool-btn i {
+    color: var(--primary);
+}
+
+.tool-btn:hover {
+    background: var(--primary-soft);
+    transform: translateX(4px);
+}
+
+.tool-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tool-btn.active i {
+    color: white;
+}
+
+/* CANVAS */
+#canvas-container {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(145deg, #ffffff, var(--primary-soft));
+    border-radius: 32px;
+    padding: 2.5rem;
+    overflow: auto;
+}
+
+/* ACTION BAR */
+#canvas-actions {
+    position: sticky;
+    top: 0;
+    margin: 0 auto 2rem;
+    width: fit-content;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 999px;
+    display: flex;
+    gap: 0.5rem;
+    border: 2px solid var(--border);
+    box-shadow: 0 10px 25px rgba(204, 102, 153, 0.2);
+    z-index: 10;
+}
+
+#canvas-actions button {
+    border: none;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+#canvas-actions button:hover {
+    background: var(--primary-soft);
+}
+
+/* SLIDES */
+.slide {
+    position: absolute;
+    width: 260px;
+    background: white;
+    border-radius: 24px;
+    border: 2px solid var(--border);
+    box-shadow: 0 12px 30px rgba(204, 102, 153, 0.15);
+    padding: 0.8rem;
+}
+
+/* SLIDE HEADER */
+.slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: 16px;
+    padding: 0.5rem 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    cursor: grab;
+}
+
+/* SLIDE BODY */
+.slide-body h3 {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+}
+
+.slide-body p {
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+>>>>>>> a0800cc9a8562c1e52a300d8802c23a11f843692
