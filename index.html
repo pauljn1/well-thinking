@@ -46,11 +46,11 @@
             </svg>
 
         <div id="canvas-actions">
-            <button id="btn-add"><i class="fa-solid fa-plus"></i> Nouvelle</button>
-            <button id="btn-duplicate"><i class="fa-solid fa-copy"></i> Dupliquer</button>
-            <button id="btn-delete"><i class="fa-solid fa-trash"></i> Supprimer</button>
+            <button id="btn-add" title="Ajouter une slide"><i class="fa-solid fa-plus"></i> Nouvelle</button>
+            <button id="btn-duplicate" title="Dupliquer la sélection"><i class="fa-solid fa-copy"></i> Dupliquer</button>
+            <button id="btn-delete" title="Supprimer la sélection"><i class="fa-solid fa-trash"></i> Supprimer</button>
             <span class="separator">|</span>
-            <button id="btn-clear-all" class="danger-btn"><i class="fa-solid fa-eraser"></i> Tout vider</button>
+            <button id="btn-clear-all" class="danger-btn" title="Tout effacer"><i class="fa-solid fa-eraser"></i> Tout vider</button>
         </div>
 
         </section>
@@ -58,7 +58,16 @@
 </main>
 
 <div id="preview-overlay" class="hidden">
-    <button id="close-preview"><i class="fa-solid fa-xmark"></i> Quitter</button>
+    
+    <div style="position: absolute; top: 30px; width: 80%; display: flex; justify-content: space-between; max-width: 900px; z-index: 10001;">
+        <button id="btn-preview-back" style="background: white; border: none; color: #cc6699; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <i class="fa-solid fa-arrow-left"></i> Retour
+        </button>
+        
+        <button id="close-preview" style="background: rgba(0,0,0,0.5); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; margin-left: auto;">
+            <i class="fa-solid fa-xmark"></i> Quitter
+        </button>
+    </div>
     
     <div id="preview-card">
         <h2 id="p-title">Titre de la slide</h2>
