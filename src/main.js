@@ -16,41 +16,18 @@ let tempLine = null; // La ligne qu'on est en train de tirer
 let startSocket = null; // D'où part la ligne
 let connections = []; // Stocke { id: "link-1", from: "slide-1", to: "slide-2", label: "Choix 1" }
 
-// --- Variables pour le positionnement en cascade ---
-let spawnX = 50;
-let spawnY = 50;
-
 /* =========================================
-   1. CRÉATION DES SLIDES (Avec décalage)
+   1. CRÉATION DES SLIDES
 ========================================= */
-function createSlide(x = null, y = null) {
+function createSlide(x = 150, y = 150) {
     slideCount++;
-    const slideId = `slide-${Date.now()}`;
-
-    // Si aucune position n'est donnée (clic bouton), on utilise le décalage automatique
-    let finalX = x;
-    let finalY = y;
-
-    if (finalX === null || finalY === null) {
-        // On décale de 30px vers la droite et 20px vers le bas
-        spawnX += 30;
-        spawnY += 20;
-
-        // Si on sort trop de l'écran, on revient au début (reset)
-        if (spawnX > 400) { 
-            spawnX = 50; 
-            spawnY = 50; 
-        }
-
-        finalX = spawnX;
-        finalY = spawnY;
-    }
+    const slideId = `slide-${Date.now()}`; // ID unique basé sur l'heure
 
     const div = document.createElement("div");
     div.classList.add("slide");
-    div.id = slideId;
-    div.style.left = finalX + "px";
-    div.style.top = finalY + "px";
+    div.id = slideId; // On donne l'ID au HTML
+    div.style.left = x + "px";
+    div.style.top = y + "px";
 
     div.innerHTML = `
         <div class="slide-header">
@@ -68,6 +45,15 @@ function createSlide(x = null, y = null) {
     makeDraggable(div);
     setupSocket(div.querySelector('.socket'), slideId);
 }
+
+// Initialisation : créer 2 slides par défaut
+createSlide(100, 150);
+createSlide(500, 250);
+
+// Boutons d'ajout
+document.getElementById("btn-add").addEventListener("click", () => createSlide());
+document.getElementById("btn-add-sidebar").addEventListener("click", () => createSlide());
+
 /* =========================================
    2. LOGIQUE DE DÉPLACEMENT (DRAG SLIDE)
 ========================================= */
