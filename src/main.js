@@ -54,6 +54,34 @@ createSlide(500, 250);
 document.getElementById("btn-add").addEventListener("click", () => createSlide());
 document.getElementById("btn-add-sidebar").addEventListener("click", () => createSlide());
 
+/* =========================
+   DUPLIQUER LA SLIDE SELECTIONNÉE
+========================= */
+
+document.getElementById("btn-duplicate").addEventListener("click", () => {
+    if (!selectedSlide) {
+        alert("Sélectionne une slide à dupliquer 🙂");
+        return;
+    }
+
+    // Clone la slide
+    const clone = selectedSlide.cloneNode(true);
+
+    // Décaler légèrement la position pour qu'on voie le clone
+    const left = parseInt(selectedSlide.style.left || 0);
+    const top = parseInt(selectedSlide.style.top || 0);
+    clone.style.left = (left + 40) + "px";
+    clone.style.top = (top + 40) + "px";
+
+    // Ajouter le clone au canvas
+    document.getElementById("canvas-container").appendChild(clone);
+
+    // Mettre à jour la sélection pour le clone
+    document.querySelectorAll(".slide").forEach(s => s.style.outline = "none");
+    selectedSlide = clone;
+    clone.style.outline = "3px solid var(--primary)";
+});
+
 /* =========================================
    2. LOGIQUE DE DÉPLACEMENT (DRAG SLIDE)
 ========================================= */
