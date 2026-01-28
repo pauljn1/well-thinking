@@ -503,7 +503,7 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 .resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
 .resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
 .resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
-.text-element { min-width: 100px; min-height: 30px; padding: 10px; }
+.text-element { min-width: 100px; min-height: 30px; padding: 10px; overflow: hidden; word-wrap: break-word; word-break: break-word; white-space: normal; }
 .text-element[contenteditable="true"] { outline: none; cursor: text; }
 .image-element { min-width: 50px; min-height: 50px; }
 .image-element img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
