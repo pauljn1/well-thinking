@@ -778,6 +778,27 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 .tree-tool-btn.primary:hover {
     background: var(--primary-dark);
 }
+
+/* Contrôles de zoom */
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 2px solid var(--border);
+}
+
+.zoom-level {
+    min-width: 50px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: var(--background);
+    padding: 6px 10px;
+    border-radius: var(--radius-full);
+}
 .tree-tool-btn.danger:hover {
     background: var(--danger-soft);
     border-color: var(--danger);
@@ -1593,6 +1614,83 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 .scenario-connection-line:hover {
     stroke: var(--primary-dark);
     stroke-width: 5px;
+}
+
+/* Connexions automatiques depuis les éléments Navigation (navlink) */
+.scenario-connection-line.navlink-connection {
+    stroke: #3498db;
+    stroke-dasharray: none;
+    animation: navlinkPulse 2s ease-in-out infinite;
+}
+
+.scenario-connection-line.navlink-connection:hover {
+    stroke: #2980b9;
+    stroke-width: 5px;
+}
+
+@keyframes navlinkPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Menu contextuel pour supprimer les connexions */
+.connection-context-menu {
+    position: fixed;
+    z-index: 10000;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 6px;
+    min-width: 200px;
+    animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+.connection-context-menu.hidden {
+    display: none;
+}
+
+@keyframes contextMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.context-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.15s ease;
+}
+
+.context-menu-btn:hover {
+    background: #f5f5f5;
+}
+
+.context-menu-btn.danger {
+    color: #e74c3c;
+}
+
+.context-menu-btn.danger:hover {
+    background: #fdeaea;
+}
+
+.context-menu-btn i {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
 }
 
 /* Bouton d'édition sur les connexions */

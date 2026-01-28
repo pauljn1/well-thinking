@@ -222,20 +222,26 @@
                 <button class="tree-tool-btn primary" id="addSlideTreeBtn" title="Ajouter une slide">
                     <i class="fas fa-plus"></i> Nouvelle slide
                 </button>
-                
-                <button class="tree-tool-btn" id="connectModeBtn" title="Mode connexion">
-                    <i class="fas fa-link"></i> Connecter
-                </button>
 
                 <button class="tree-tool-btn" id="resetTreeBtn" title="Réorganiser">
                     <i class="fas fa-th"></i> Réorganiser
                 </button>
-                <button class="tree-tool-btn danger" id="clearConnectionsBtn" title="Effacer connexions">
-                    <i class="fas fa-unlink"></i>
-                </button>
                 <button class="tree-tool-btn preview-btn" id="previewTreeBtn" title="Aperçu du scénario">
                     <i class="fas fa-play"></i> Aperçu
                 </button>
+                
+                <div class="zoom-controls">
+                    <button class="tree-tool-btn" id="zoomOutBtn" title="Dézoomer">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button class="tree-tool-btn" id="zoomInBtn" title="Zoomer">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="tree-tool-btn" id="zoomResetBtn" title="Réinitialiser le zoom">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </button>
+                </div>
             </div>
             <button class="tree-close-btn" id="closeTreeBtn">
                 <i class="fas fa-times"></i>
@@ -249,7 +255,7 @@
         
         <div class="tree-help">
             <span><i class="fas fa-arrows-alt"></i> Glisser l'icône ☰ pour déplacer</span>
-            <span><i class="fas fa-circle"></i> Tirer le point rose pour connecter</span>
+            <span><i class="fas fa-link"></i> Les connexions sont créées automatiquement via les liens de navigation</span>
             <span><i class="fas fa-hand-pointer"></i> Double-clic pour éditer</span>
         </div>
     </div>

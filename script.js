@@ -26,11 +26,10 @@ const state = {
     presentationHistory: [] 
 };
 
-// État de l'Arborescence (Fusionné)
+// État de l'Arborescence
 let treeState = {
-    connections: [],          // Liste des connexions
-    connectMode: false,       // Mode "tracer des traits" activé ou non
-    connectFrom: null,        // Point de départ d'une connexion
+    connections: [],          // Liste des connexions (générées automatiquement depuis les navlinks)
+    zoom: 1,                  // Niveau de zoom (1 = 100%)
     
     // Variables pour le déplacement des nœuds
     isDraggingSlide: false,
@@ -41,11 +40,12 @@ let treeState = {
     initialLeft: 0,
     initialTop: 0,
     
-    // Variables pour le tracé de ligne
-    isDrawingLine: false,
-    tempLine: null,
-    startSocket: null,
-    startSocketSlideId: null
+    // Variables pour le pan (déplacement de la vue)
+    isPanning: false,
+    panStartX: 0,
+    panStartY: 0,
+    panScrollLeft: 0,
+    panScrollTop: 0
 };
 
 const history = { stack: [], index: -1, maxSize: 50 };
@@ -111,6 +111,9 @@ async function loadProjectFromCloud() {
         console.error("❌ Erreur chargement :", e);
         alert("Erreur de chargement Cloud.");
     }
+
+    // Synchroniser les connexions depuis les éléments navlink existants
+    syncConnectionsFromNavLinks();
 
     // Rafraichir toute l'interface
     updateSlidesList();
@@ -191,14 +194,14 @@ function setupEventListeners(){
     document.getElementById('treeFullscreenBtn')?.addEventListener('click',openTreeFullscreen);
     document.getElementById('closeTreeBtn')?.addEventListener('click',closeTreeFullscreen);
     
-    // ARBORESCENCE (Les boutons qui posaient problème)
+    // ARBORESCENCE
     document.getElementById('addSlideTreeBtn')?.addEventListener('click', addSlideFromTree);
     document.getElementById('resetTreeBtn')?.addEventListener('click', resetTreeLayout);
-    document.getElementById('clearConnectionsBtn')?.addEventListener('click', clearAllConnections);
     
-    // IMPORTANT : On attache toggleConnectMode ici
-    const btnConnect = document.getElementById('connectModeBtn');
-    if(btnConnect) btnConnect.addEventListener('click', toggleConnectMode);
+    // Zoom
+    document.getElementById('zoomInBtn')?.addEventListener('click', () => zoomTree(0.1));
+    document.getElementById('zoomOutBtn')?.addEventListener('click', () => zoomTree(-0.1));
+    document.getElementById('zoomResetBtn')?.addEventListener('click', resetZoom);
 
     // Aperçu
     document.getElementById('previewTreeBtn')?.addEventListener('click', startPresentationFromTree);
@@ -496,6 +499,10 @@ function addNavLinkElement(){
     };
     state.slides[state.currentSlideIndex].elements.push(element);
     state.selectedElement = element;
+    
+    // Synchroniser automatiquement les connexions de l'arborescence
+    syncConnectionsFromNavLinks();
+    
     renderCurrentSlide();
     showElementProperties();
     saveProject();
@@ -649,7 +656,20 @@ function updateElementTextContent(){
 
 function updateNavLinkTarget(){
     if(state.selectedElement?.type === 'navlink'){
-        state.selectedElement.targetSlideId = parseInt(document.getElementById('targetSlideSelect').value);
+        const currentSlideId = state.slides[state.currentSlideIndex].id;
+        const oldTargetId = state.selectedElement.targetSlideId;
+        const newTargetId = parseInt(document.getElementById('targetSlideSelect').value);
+        
+        // Supprimer l'ancienne connexion si elle existe
+        if(oldTargetId) {
+            removeNavLinkConnection(currentSlideId, oldTargetId);
+        }
+        
+        state.selectedElement.targetSlideId = newTargetId;
+        
+        // Créer la nouvelle connexion automatiquement
+        syncConnectionsFromNavLinks();
+        
         saveProject();
     }
 }
@@ -674,6 +694,11 @@ function deleteSelectedElement(){
     const slide=state.slides[state.currentSlideIndex];
     const index=slide.elements.findIndex(e=>e.id===state.selectedElement.id);
     if(index!==-1){
+        // Si c'est un navlink, supprimer la connexion correspondante
+        if(state.selectedElement.type === 'navlink' && state.selectedElement.targetSlideId) {
+            removeNavLinkConnection(slide.id, state.selectedElement.targetSlideId);
+        }
+        
         slide.elements.splice(index,1);
         state.selectedElement=null;
         renderCurrentSlide();
@@ -821,6 +846,14 @@ function handleCanvasMouseDown(e){
 
 function openTreeFullscreen() {
     document.getElementById('treeFullscreen').classList.add('active');
+    
+    // Synchroniser les connexions depuis les éléments navlink avant d'afficher
+    syncConnectionsFromNavLinks();
+    
+    // Réinitialiser le zoom
+    treeState.zoom = 1;
+    applyZoom();
+    
     renderTreeNodes();
     drawConnections();
     setupScenarioEvents();
@@ -833,12 +866,25 @@ function closeTreeFullscreen() {
 
 let scenarioMouseMoveHandler = null;
 let scenarioMouseUpHandler = null;
+let scenarioWheelHandler = null;
+let scenarioMouseDownHandler = null;
 
 function setupScenarioEvents() {
     scenarioMouseMoveHandler = handleScenarioMouseMove;
     scenarioMouseUpHandler = handleScenarioMouseUp;
+    scenarioWheelHandler = handleScenarioWheel;
+    scenarioMouseDownHandler = handleScenarioMouseDown;
     document.addEventListener('mousemove', scenarioMouseMoveHandler);
     document.addEventListener('mouseup', scenarioMouseUpHandler);
+    
+    const treeCanvas = document.getElementById('treeCanvas');
+    if (treeCanvas) {
+        // Zoom avec la molette (Ctrl + scroll)
+        treeCanvas.addEventListener('wheel', scenarioWheelHandler, { passive: false });
+        // Pan avec clic sur le fond
+        treeCanvas.addEventListener('mousedown', scenarioMouseDownHandler);
+        treeCanvas.style.cursor = 'grab';
+    }
 }
 
 function cleanupScenarioEvents() {
@@ -848,28 +894,93 @@ function cleanupScenarioEvents() {
     if (scenarioMouseUpHandler) {
         document.removeEventListener('mouseup', scenarioMouseUpHandler);
     }
+    const treeCanvas = document.getElementById('treeCanvas');
+    if (treeCanvas) {
+        if (scenarioWheelHandler) {
+            treeCanvas.removeEventListener('wheel', scenarioWheelHandler);
+        }
+        if (scenarioMouseDownHandler) {
+            treeCanvas.removeEventListener('mousedown', scenarioMouseDownHandler);
+        }
+        treeCanvas.style.cursor = '';
+    }
 }
 
-// C'EST ICI QUE LE BUG ÉTAIT : La fonction manquait
-function toggleConnectMode() {
-    treeState.connectMode = !treeState.connectMode;
-    treeState.connectFrom = null;
+// Démarrer le pan quand on clique sur le fond du canvas
+function handleScenarioMouseDown(e) {
+    const treeCanvas = document.getElementById('treeCanvas');
     
-    const btn = document.getElementById('connectModeBtn');
-    if(btn) {
-        if(treeState.connectMode) {
-            btn.classList.add('active');
-            btn.innerHTML = '<i class="fas fa-times"></i> Annuler';
-        } else {
-            btn.classList.remove('active');
-            btn.innerHTML = '<i class="fas fa-link"></i> Connecter';
-        }
+    // Ne pas démarrer le pan si on clique sur une slide ou un élément interactif
+    if (e.target.closest('.scenario-slide-card') || e.target.closest('.tree-tool-btn')) {
+        return;
+    }
+    
+    // Démarrer le pan (clic gauche ou molette)
+    if (e.button === 0 || e.button === 1) {
+        e.preventDefault();
+        treeState.isPanning = true;
+        treeState.panStartX = e.clientX;
+        treeState.panStartY = e.clientY;
+        treeState.panScrollLeft = treeCanvas.scrollLeft;
+        treeState.panScrollTop = treeCanvas.scrollTop;
+        treeCanvas.style.cursor = 'grabbing';
+        document.body.style.cursor = 'grabbing';
+    }
+}
+
+// Gestion du zoom avec la molette
+function handleScenarioWheel(e) {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        zoomTree(delta);
+    }
+}
+
+// Zoomer / Dézoomer l'arborescence
+function zoomTree(delta) {
+    treeState.zoom = Math.min(2, Math.max(0.3, treeState.zoom + delta));
+    applyZoom();
+}
+
+// Réinitialiser le zoom
+function resetZoom() {
+    treeState.zoom = 1;
+    applyZoom();
+}
+
+// Appliquer le zoom
+function applyZoom() {
+    const treeNodes = document.getElementById('treeNodes');
+    const treeSvg = document.getElementById('treeSvg');
+    const zoomLabel = document.getElementById('zoomLevel');
+    
+    if (treeNodes) {
+        treeNodes.style.transform = `scale(${treeState.zoom})`;
+        treeNodes.style.transformOrigin = 'top left';
+    }
+    if (treeSvg) {
+        treeSvg.style.transform = `scale(${treeState.zoom})`;
+        treeSvg.style.transformOrigin = 'top left';
+    }
+    if (zoomLabel) {
+        zoomLabel.textContent = Math.round(treeState.zoom * 100) + '%';
     }
 }
 
 function handleScenarioMouseMove(e) {
     const canvas = document.getElementById('treeCanvas');
     if (!canvas) return;
+
+    // Pan (déplacement de la vue)
+    if (treeState.isPanning) {
+        e.preventDefault();
+        const dx = e.clientX - treeState.panStartX;
+        const dy = e.clientY - treeState.panStartY;
+        canvas.scrollLeft = treeState.panScrollLeft - dx;
+        canvas.scrollTop = treeState.panScrollTop - dy;
+        return;
+    }
 
     // Déplacement d'une slide
     if (treeState.isDraggingSlide && treeState.currentDragSlide) {
@@ -896,21 +1007,17 @@ function handleScenarioMouseMove(e) {
         
         drawConnections();
     }
-
-    // Tracé d'une ligne temporaire
-    if (treeState.isDrawingLine && treeState.tempLine) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - canvasRect.left + canvas.scrollLeft;
-        const mouseY = e.clientY - canvasRect.top + canvas.scrollTop;
-        const lineStartX = parseFloat(treeState.tempLine.dataset.startX);
-        const lineStartY = parseFloat(treeState.tempLine.dataset.startY);
-        
-        const d = `M ${lineStartX} ${lineStartY} L ${mouseX} ${mouseY}`;
-        treeState.tempLine.setAttribute('d', d);
-    }
 }
 
 function handleScenarioMouseUp(e) {
+    // Fin du pan
+    if (treeState.isPanning) {
+        treeState.isPanning = false;
+        document.body.style.cursor = 'default';
+        const canvas = document.getElementById('treeCanvas');
+        if (canvas) canvas.style.cursor = 'grab';
+    }
+    
     // Fin du drag d'une slide
     if (treeState.isDraggingSlide) {
         treeState.isDraggingSlide = false;
@@ -921,27 +1028,6 @@ function handleScenarioMouseUp(e) {
         treeState.currentDragSlide = null;
         document.body.style.cursor = 'default';
         saveProject();
-    }
-
-    // Fin du tracé d'une connexion
-    if (treeState.isDrawingLine) {
-        const targetSlide = e.target.closest('.scenario-slide-card');
-        
-        if (targetSlide && treeState.startSocketSlideId) {
-            const targetSlideId = targetSlide.dataset.slideId;
-            if (targetSlideId != treeState.startSocketSlideId) {
-                createScenarioConnection(treeState.startSocketSlideId, targetSlideId);
-            }
-        }
-        
-        // Nettoyer la ligne temporaire
-        if (treeState.tempLine) {
-            treeState.tempLine.remove();
-            treeState.tempLine = null;
-        }
-        treeState.isDrawingLine = false;
-        treeState.startSocket = null;
-        treeState.startSocketSlideId = null;
     }
 }
 
@@ -982,7 +1068,6 @@ function createScenarioSlideCard(slide, index) {
         <div class="scenario-card-body">
             ${previewContent}
         </div>
-        <div class="scenario-socket" title="Tirer pour relier à une autre slide"></div>
     `;
     
     setupScenarioCardEvents(card, slide, index);
@@ -1016,7 +1101,6 @@ function generateScenarioPreview(slide) {
 
 function setupScenarioCardEvents(card, slide, index) {
     const handle = card.querySelector('.scenario-handle');
-    const socket = card.querySelector('.scenario-socket');
     
     // Drag par la poignée
     handle.addEventListener('mousedown', (e) => {
@@ -1035,12 +1119,6 @@ function setupScenarioCardEvents(card, slide, index) {
         document.body.style.cursor = 'grabbing';
     });
     
-    // Clic sur le socket pour créer une connexion
-    socket.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        startDrawingConnection(socket, slide.id);
-    });
-    
     // Double-clic pour éditer la slide
     card.addEventListener('dblclick', () => {
         state.currentSlideIndex = index;
@@ -1052,62 +1130,65 @@ function setupScenarioCardEvents(card, slide, index) {
     
     // Clic simple pour sélectionner
     card.addEventListener('click', (e) => {
-        if (!e.target.closest('.scenario-socket') && !e.target.closest('.scenario-handle')) {
+        if (!e.target.closest('.scenario-handle')) {
             document.querySelectorAll('.scenario-slide-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
         }
     });
 }
 
-function startDrawingConnection(socketElement, slideId) {
-    const canvas = document.getElementById('treeCanvas');
-    const svg = document.getElementById('treeSvg');
-    if (!canvas || !svg) return;
+// Synchronisation automatique des connexions depuis les éléments navlink
+function syncConnectionsFromNavLinks() {
+    // Parcourir toutes les slides et leurs éléments navlink
+    state.slides.forEach(slide => {
+        const navlinks = slide.elements.filter(el => el.type === 'navlink' && el.targetSlideId);
+        
+        navlinks.forEach(navlink => {
+            const fromId = slide.id;
+            const toId = navlink.targetSlideId;
+            
+            // Vérifier si la connexion existe déjà
+            const exists = treeState.connections.some(c => 
+                c.from == fromId && c.to == toId
+            );
+            
+            // Créer la connexion si elle n'existe pas
+            if (!exists && fromId != toId) {
+                const connection = {
+                    id: `navlink-conn-${navlink.id}`,
+                    from: fromId,
+                    to: toId,
+                    label: navlink.label || '',
+                    fromNavLink: true,  // Marqueur pour identifier les connexions auto
+                    navLinkId: navlink.id
+                };
+                treeState.connections.push(connection);
+            }
+        });
+    });
     
-    treeState.isDrawingLine = true;
-    treeState.startSocket = socketElement;
-    treeState.startSocketSlideId = slideId;
-    
-    const rect = socketElement.getBoundingClientRect();
-    const canvasRect = canvas.getBoundingClientRect();
-    const x = rect.left + rect.width / 2 - canvasRect.left + canvas.scrollLeft;
-    const y = rect.top + rect.height / 2 - canvasRect.top + canvas.scrollTop;
-    
-    const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    tempLine.setAttribute('stroke', '#cc6699');
-    tempLine.setAttribute('stroke-width', '3');
-    tempLine.setAttribute('fill', 'none');
-    tempLine.setAttribute('stroke-dasharray', '5,5');
-    tempLine.dataset.startX = x;
-    tempLine.dataset.startY = y;
-    
-    svg.appendChild(tempLine);
-    treeState.tempLine = tempLine;
+    // Redessiner les connexions si la vue arborescence est ouverte
+    if (document.getElementById('treeFullscreen')?.classList.contains('active')) {
+        drawConnections();
+    }
 }
 
-function createScenarioConnection(fromId, toId) {
-    const exists = treeState.connections.some(c => c.from == fromId && c.to == toId);
-    if (exists || fromId == toId) return;
+// Supprimer une connexion liée à un navlink spécifique
+function removeNavLinkConnection(slideId, targetSlideId) {
+    treeState.connections = treeState.connections.filter(c => 
+        !(c.from == slideId && c.to == targetSlideId && c.fromNavLink)
+    );
     
-    const connection = {
-        id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        from: fromId,
-        to: toId,
-        label: '' 
-    };
-    
-    treeState.connections.push(connection);
-    drawConnections();
-    saveProject();
+    if (document.getElementById('treeFullscreen')?.classList.contains('active')) {
+        drawConnections();
+    }
 }
 
 function drawConnections() {
     const svg = document.getElementById('treeSvg');
     if (!svg) return;
     
-    const tempLine = treeState.tempLine;
     svg.innerHTML = '';
-    if (tempLine) svg.appendChild(tempLine);
     
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
@@ -1116,6 +1197,9 @@ function drawConnections() {
         </marker>
         <marker id="arrowhead-labeled" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill="#9b59b6"/>
+        </marker>
+        <marker id="arrowhead-navlink" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#3498db"/>
         </marker>
     `;
     svg.appendChild(defs);
@@ -1131,19 +1215,18 @@ function drawConnections() {
         
         if (!fromCard || !toCard) return;
         
-        const fromSocket = fromCard.querySelector('.scenario-socket');
-        const canvasRect = slideCanvas.getBoundingClientRect(); // Use consistent ref if possible or treeCanvas
-        
-        // Note: Ici on recalcule positions par rapport au treeCanvas
+        // Calculer les positions par rapport au treeCanvas
         const tCanvas = document.getElementById('treeCanvas');
         const tRect = tCanvas.getBoundingClientRect();
         
-        const fRect = fromSocket.getBoundingClientRect();
+        const fromCardRect = fromCard.getBoundingClientRect();
         const tCardRect = toCard.getBoundingClientRect();
         
-        const x1 = fRect.left + fRect.width / 2 - tRect.left + tCanvas.scrollLeft;
-        const y1 = fRect.top + fRect.height / 2 - tRect.top + tCanvas.scrollTop;
+        // Point de départ : bord droit de la carte source, au milieu verticalement
+        const x1 = fromCardRect.right - tRect.left + tCanvas.scrollLeft;
+        const y1 = fromCardRect.top + fromCardRect.height / 2 - tRect.top + tCanvas.scrollTop;
         
+        // Point d'arrivée : bord gauche de la carte cible, au milieu verticalement
         const x2 = tCardRect.left - tRect.left + tCanvas.scrollLeft;
         const y2 = tCardRect.top + tCardRect.height / 2 - tRect.top + tCanvas.scrollTop;
         
@@ -1152,13 +1235,26 @@ function drawConnections() {
         const d = `M ${x1} ${y1} C ${cp1x} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
         
         path.setAttribute('d', d);
-        path.setAttribute('stroke', conn.label ? '#9b59b6' : '#cc6699');
-        path.setAttribute('stroke-width', '3');
+        
+        // Style différent pour les connexions créées automatiquement depuis navlink
+        if (conn.fromNavLink) {
+            path.setAttribute('stroke', '#3498db');  // Bleu pour les navlinks
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('marker-end', 'url(#arrowhead-navlink)');
+            path.classList.add('navlink-connection');
+        } else if (conn.label) {
+            path.setAttribute('stroke', '#9b59b6');
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('marker-end', 'url(#arrowhead-labeled)');
+        } else {
+            path.setAttribute('stroke', '#cc6699');
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('marker-end', 'url(#arrowhead)');
+        }
+        
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('marker-end', conn.label ? 'url(#arrowhead-labeled)' : 'url(#arrowhead)');
         path.classList.add('scenario-connection-line');
-        path.style.cursor = 'pointer';
         path.dataset.connectionId = conn.id;
         
         svg.appendChild(path);
@@ -1190,15 +1286,6 @@ function resetTreeLayout() {
     renderTreeNodes();
     drawConnections();
     saveProject();
-}
-
-function clearAllConnections() {
-    if (treeState.connections.length === 0) return;
-    if (confirm('Supprimer toutes les connexions ?')) {
-        treeState.connections = [];
-        drawConnections();
-        saveProject();
-    }
 }
 
 // ==========================================
