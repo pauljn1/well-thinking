@@ -243,6 +243,8 @@ function setupEventListeners(){
     document.getElementById('targetSlideSelect')?.addEventListener('change',updateNavLinkTarget);
     document.getElementById('navLinkLabel')?.addEventListener('input',updateNavLinkLabel);
     document.getElementById('navLinkColor')?.addEventListener('input',updateNavLinkColor);
+    document.getElementById('shapeColor')?.addEventListener('input',updateShapeColor);
+    document.getElementById('shapeRotation')?.addEventListener('input',updateShapeRotation);
     document.getElementById('deleteElement')?.addEventListener('click',deleteSelectedElement);
     
     // Présentation & Export
@@ -422,7 +424,8 @@ function renderSlideContent(slide,isThumbnail=false){
             case'image':
                 return`<div class="slide-element image-element ${selected}" data-id="${elem.id}" style="${style}"><img src="${elem.src}" alt="Image" style="width:100%;height:100%;object-fit:contain;">${resizeHandles}</div>`;
             case'shape':
-                return`<div class="slide-element shape-element ${selected}" data-id="${elem.id}" style="${style}">${renderShape(elem.shape,elem.color||'#7c3aed')}${resizeHandles}</div>`;
+                const rotation = elem.rotation || 0;
+                return`<div class="slide-element shape-element ${selected}" data-id="${elem.id}" style="${style}transform:rotate(${rotation}deg);">${renderShape(elem.shape,elem.color||'#7c3aed')}${resizeHandles}</div>`;
             case'navlink':
                 const targetIndex = state.slides.findIndex(s => s.id === elem.targetSlideId);
                 const targetLabel = targetIndex !== -1 ? `Slide ${targetIndex + 1}` : 'Non défini';
@@ -436,7 +439,7 @@ function renderShape(shape,color){
     switch(shape){
         case'rectangle':return`<div style="width:100%;height:100%;background:${color};border-radius:4px;"></div>`;
         case'circle':return`<div style="width:100%;height:100%;background:${color};border-radius:50%;"></div>`;
-        case'triangle':return`<div style="width:0;height:0;border-left:50% solid transparent;border-right:50% solid transparent;border-bottom:100% solid ${color};"></div>`;
+        case'triangle':return`<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="50,5 5,95 95,95" fill="${color}"/></svg>`;
         case'star':return`<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="${color}"/></svg>`;
         case'arrow':return`<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="0,35 60,35 60,10 100,50 60,90 60,65 0,65" fill="${color}"/></svg>`;
         case'line':return`<div style="width:100%;height:4px;background:${color};position:absolute;top:50%;transform:translateY(-50%);"></div>`;
@@ -551,11 +554,15 @@ function showElementProperties(){
     const navLinkRow = document.getElementById('navLinkRow');
     const navLinkLabelRow = document.getElementById('navLinkLabelRow');
     const navLinkColorRow = document.getElementById('navLinkColorRow');
+    const shapeColorRow = document.getElementById('shapeColorRow');
+    const shapeRotationRow = document.getElementById('shapeRotationRow');
     
     if(textContentRow) textContentRow.style.display = 'none';
     if(navLinkRow) navLinkRow.style.display = 'none';
     if(navLinkLabelRow) navLinkLabelRow.style.display = 'none';
     if(navLinkColorRow) navLinkColorRow.style.display = 'none';
+    if(shapeColorRow) shapeColorRow.style.display = 'none';
+    if(shapeRotationRow) shapeRotationRow.style.display = 'none';
     
     if(state.selectedElement.type === 'text'){
         if(textContentRow) textContentRow.style.display = 'flex';
@@ -567,6 +574,9 @@ function showElementProperties(){
             if(navLinkLabelRow) navLinkLabelRow.style.display = 'flex';
             if(navLinkColorRow) navLinkColorRow.style.display = 'flex';
             populateTargetSlideSelect();
+        } else if(state.selectedElement.type === 'shape'){
+            if(shapeColorRow) shapeColorRow.style.display = 'flex';
+            if(shapeRotationRow) shapeRotationRow.style.display = 'flex';
         }
     }
     updatePropertiesInputs();
@@ -615,6 +625,11 @@ function updatePropertiesInputs(){
         document.getElementById('targetSlideSelect').value = state.selectedElement.targetSlideId || '';
         document.getElementById('navLinkLabel').value = state.selectedElement.label || '';
         document.getElementById('navLinkColor').value = state.selectedElement.color || '#cc6699';
+    }
+    if(state.selectedElement.type === 'shape'){
+        document.getElementById('shapeColor').value = state.selectedElement.color || '#7c3aed';
+        document.getElementById('shapeRotation').value = state.selectedElement.rotation || 0;
+        document.getElementById('rotationValue').textContent = (state.selectedElement.rotation || 0) + '°';
     }
 }
 
@@ -684,6 +699,24 @@ function updateNavLinkLabel(){
 function updateNavLinkColor(){
     if(state.selectedElement?.type === 'navlink'){
         state.selectedElement.color = document.getElementById('navLinkColor').value;
+        renderCurrentSlide();
+        saveProject();
+    }
+}
+
+function updateShapeColor(){
+    if(state.selectedElement?.type === 'shape'){
+        state.selectedElement.color = document.getElementById('shapeColor').value;
+        renderCurrentSlide();
+        saveProject();
+    }
+}
+
+function updateShapeRotation(){
+    if(state.selectedElement?.type === 'shape'){
+        const rotation = parseInt(document.getElementById('shapeRotation').value) || 0;
+        state.selectedElement.rotation = rotation;
+        document.getElementById('rotationValue').textContent = rotation + '°';
         renderCurrentSlide();
         saveProject();
     }
