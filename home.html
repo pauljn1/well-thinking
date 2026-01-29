@@ -136,7 +136,7 @@
 
         // Génère un aperçu miniature de la première slide
         function renderThumbnail(slide) {
-            // Vérification robuste : elements peut être un objet ou un array selon Firebase
+           // Firebase peut convertir les arrays en objets, on gère les deux cas
             let elements = slide?.elements;
             if (!elements) {
                 return '<span style="color:#aaa; font-size:11px;">Slide vide</span>';

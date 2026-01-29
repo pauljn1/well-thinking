@@ -1,11 +1,11 @@
 // js/database.js
 
-// 1. Imports complets (Auth + Firestore + Outils de requête)
+// 1. Importation des modules Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. Ta configuration (Celle que tu m'as envoyée)
+// 2. Configuration de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBZIPI67Aey0lOGUUHI-8ilWY1w4zJaXkg",
   authDomain: "diapodynamique.firebaseapp.com",
@@ -31,6 +31,7 @@ export async function inscription(email, password) {
         throw error;
     }
 }
+
 
 export async function connexion(email, password) {
     try {
@@ -81,7 +82,6 @@ export async function chargerProjet(nomProjet) {
     }
 }
 
-// --- FONCTIONS MANQUANTES (C'est ça qui bloquait ta Home) ---
 
 // Récupère la liste de tous les projets de l'utilisateur connecté
 export async function recupererMesProjets() {

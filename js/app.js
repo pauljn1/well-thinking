@@ -83,8 +83,7 @@ surveillerSession((user) => {
     const infoUser = document.getElementById('user-info');
     if (user) {
         infoUser.innerText = "Connecté en tant que : " + user.email;
-        // Tu peux ici afficher les boutons de sauvegarde et cacher ceux de connexion
-    } else {
+     // Ici on peut afficher les boutons de sauvegarde et cacher ceux de connexion    } else {
         infoUser.innerText = "Non connecté";
     }
 });

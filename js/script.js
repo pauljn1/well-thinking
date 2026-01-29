@@ -206,8 +206,6 @@ function setupEventListeners(){
 
     // Aperçu
     document.getElementById('previewTreeBtn')?.addEventListener('click', startPresentationFromTree);
-    document.getElementById('scenarioPreviewBack')?.addEventListener('click', goBackInPreview);
-    document.getElementById('closeScenarioPreview')?.addEventListener('click', closeScenarioPreview);
 
     // Formatage & Inputs
     document.getElementById('boldBtn')?.addEventListener('click',()=>toggleFormat('bold'));
@@ -908,7 +906,7 @@ function handleCanvasMouseDown(e){
 }
 
 // ==========================================
-// 7. ARBORESCENCE AVANCÉE (Correction toggleConnectMode)
+// 7. ARBORESCENCE
 // ==========================================
 
 function openTreeFullscreen() {
@@ -1233,8 +1231,8 @@ function syncConnectionsFromNavLinks() {
                     from: fromId,
                     to: toId,
                     label: navlink.label || '',
-                    color: navlink.color || '#cc6699',  // Utiliser la couleur du navlink
-                    fromNavLink: true,  // Marqueur pour identifier les connexions auto
+                    color: navlink.color || '#cc6699',
+                    fromNavLink: true,
                     navLinkId: navlink.id
                 };
                 treeState.connections.push(connection);
@@ -1310,10 +1308,7 @@ function drawConnections() {
         const toCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.to}"]`);
         
         if (!fromCard || !toCard) return;
-        
-        // Utiliser les positions stockées dans les données des slides (pas affectées par le zoom)
-        const zoom = treeState.zoom || 1;
-        
+                
         // Obtenir les dimensions des cartes (sans zoom) - correspond au CSS
         const cardWidth = 260;  // Largeur fixe des cartes scenario
         const cardHeight = 150; // Hauteur minimale des cartes scenario
@@ -1399,8 +1394,7 @@ function drawConnections() {
         group.classList.add('connection-group');
         group.dataset.connectionId = conn.id;
         
-        // Calculer les points de contrôle pour une courbe de Bézier élégante
-        let cp1x, cp1y, cp2x, cp2y;
+        // Points de contrôle pour la courbe de Bézier        let cp1x, cp1y, cp2x, cp2y;
         const curveStrength = Math.min(Math.abs(dx), Math.abs(dy), 80) + 40;
         
         if (exitSide === 'right') {
@@ -1673,7 +1667,8 @@ function exportPresentation(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download='presentation.json';
+    const projectName = localStorage.getItem('current_project_name') || 'presentation';
+    a.download = `${projectName}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -1741,6 +1736,3 @@ function handleImportFile(event) {
     // Reset l'input pour permettre de réimporter le même fichier
     event.target.value = '';
 }
-
-function goBackInPreview() {}
-function closeScenarioPreview() {}
