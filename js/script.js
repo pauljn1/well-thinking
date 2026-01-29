@@ -265,6 +265,8 @@ function setupEventListeners(){
     document.getElementById('presPrev')?.addEventListener('click',()=>navigatePresentation(-1));
     document.getElementById('presNext')?.addEventListener('click',()=>navigatePresentation(1));
     document.getElementById('exportBtn')?.addEventListener('click',exportPresentation);
+    document.getElementById('importBtn')?.addEventListener('click',importPresentation);
+    document.getElementById('importFileInput')?.addEventListener('change',handleImportFile);
     
     // Souris Canvas
     if(slideCanvas) {
@@ -1674,6 +1676,70 @@ function exportPresentation(){
     a.download='presentation.json';
     a.click();
     URL.revokeObjectURL(url);
+}
+
+// Importer une présentation depuis un fichier JSON
+function importPresentation() {
+    const fileInput = document.getElementById('importFileInput');
+    fileInput.click();
+}
+
+function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedSlides = JSON.parse(e.target.result);
+            
+            // Vérifier que c'est un tableau valide
+            if (!Array.isArray(importedSlides)) {
+                alert('Fichier invalide : le format attendu est un tableau de slides.');
+                return;
+            }
+            
+            // Vérifier la structure basique des slides
+            const isValid = importedSlides.every(slide => 
+                slide.id !== undefined && 
+                Array.isArray(slide.elements)
+            );
+            
+            if (!isValid) {
+                alert('Fichier invalide : structure de slides incorrecte.');
+                return;
+            }
+            
+            // Remplacer les slides actuelles par les slides importées
+            state.slides = importedSlides;
+            state.currentSlideIndex = 0;
+            state.selectedElement = null;
+            
+            // Synchroniser les connexions depuis les navlinks importés
+            treeState.connections = [];
+            syncConnectionsFromNavLinks();
+            
+            // Mettre à jour l'interface
+            updateSlidesList();
+            renderCurrentSlide();
+            updateSlideCounter();
+            hideElementProperties();
+            
+            // Sauvegarder le projet importé
+            saveProject();
+
+            alert(`Présentation importée avec succès ! ${importedSlides.length} slide(s) chargée(s).`);
+            
+        } catch (error) {
+            console.error('Erreur lors de l\'import:', error);
+            alert('Erreur lors de l\'importation du fichier. Vérifiez que c\'est un fichier JSON valide.');
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset l'input pour permettre de réimporter le même fichier
+    event.target.value = '';
 }
 
 function goBackInPreview() {}
