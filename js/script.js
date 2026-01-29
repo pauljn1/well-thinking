@@ -2,7 +2,7 @@
 // 1. IMPORTS & CONFIGURATION
 // ==========================================
 
-import { sauvegarderProjet, chargerProjet, surveillerSession } from '../database.js';
+import { sauvegarderProjet, chargerProjet, surveillerSession } from './database.js';
 
 // État Global de l'application
 const state = {
