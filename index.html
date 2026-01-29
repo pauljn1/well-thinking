@@ -63,6 +63,11 @@
                     Sauvegarder
                 </button>
 
+                <button class="btn btn-secondary" id="importBtn">
+                    <i class="fas fa-upload"></i>
+                    Importer
+                </button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none;">
                 <button class="btn btn-secondary" id="exportBtn">
                     <i class="fas fa-download"></i>
                     Exporter
@@ -227,6 +232,9 @@
     <div class="presentation-mode" id="presentationMode">
         <div class="presentation-slide" id="presentationSlide"></div>
         <div class="presentation-controls">
+            <button class="pres-nav-btn" id="presPrev" title="Retour"><i class="fas fa-arrow-left"></i></button>
+            <span class="pres-counter" id="presCounter">1 / 1</span>
+            <button class="pres-nav-btn" id="presNext" title="Suivant"><i class="fas fa-arrow-right"></i></button>
             <button class="pres-exit-btn" id="presExit"><i class="fas fa-times"></i> Quitter</button>
         </div>
     </div>

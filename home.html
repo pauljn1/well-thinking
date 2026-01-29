@@ -43,19 +43,46 @@
         </section>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-left">
+            © 2026 <strong>Flowpoint</strong>
+            <span class="footer-muted">v1.0.0</span>
+        </div>
+        <div class="footer-center">
+            <a href="about.html">À propos de nous</a>
+        </div>
+        <div class="footer-right footer-muted">
+            <i class="fas fa-cloud"></i>
+            Données stockées sur le cloud
+        </div>
+    </footer>
+
     <div class="modal-overlay" id="newProjectModal">
         <div class="modal-box">
             <h3 style="color:var(--primary); margin-bottom:15px;">Nouvelle Présentation</h3>
             <input type="text" id="projectNameInput" class="auth-input" placeholder="Nom du projet..." autofocus>
             <div class="modal-buttons">
                 <button class="project-action-btn" style="background:#eee; color:#333;" id="cancelProjectBtn">Annuler</button>
-                <button class="project-action-btn btn-open" id="createProjectBtn">Créer</button>
+                <button class="project-action-btn btn-confirm" id="createProjectBtn">Créer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal renommage -->
+    <div class="modal-overlay" id="renameProjectModal">
+        <div class="modal-box">
+            <h3 style="color:var(--primary); margin-bottom:15px;">Renommer le projet</h3>
+            <input type="text" id="renameProjectInput" class="auth-input" placeholder="Nouveau nom..." autofocus>
+            <div class="modal-buttons">
+                <button class="project-action-btn" style="background:#eee; color:#333;" id="cancelRenameBtn">Annuler</button>
+                <button class="project-action-btn btn-confirm" id="confirmRenameBtn">Renommer</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        import { connexion, inscription, deconnexion, surveillerSession, sauvegarderProjet, recupererMesProjets, supprimerProjetCloud } from './js/database.js';
+        import { connexion, inscription, deconnexion, surveillerSession, sauvegarderProjet, recupererMesProjets, supprimerProjetCloud, renommerProjet } from './js/database.js';
 
         let currentUser = null;
         let isLoginMode = true;
@@ -107,6 +134,90 @@
             }
         });
 
+        // Génère un aperçu miniature de la première slide
+        function renderThumbnail(slide) {
+            // Vérification robuste : elements peut être un objet ou un array selon Firebase
+            let elements = slide?.elements;
+            if (!elements) {
+                return '<span style="color:#aaa; font-size:11px;">Slide vide</span>';
+            }
+            
+            // Si c'est un objet (Firebase convertit parfois les arrays), le convertir en array
+            if (!Array.isArray(elements)) {
+                elements = Object.values(elements);
+            }
+            
+            if (elements.length === 0) {
+                return '<span style="color:#aaa; font-size:11px;">Slide vide</span>';
+            }
+            
+            // Ratio de réduction (slide 960x540 → thumbnail ~300x160)
+            const scale = 0.3;
+            
+            return elements.map(elem => {
+                if (!elem) return '';
+                const x = (elem.x || 0) * scale;
+                const y = (elem.y || 0) * scale;
+                const w = (elem.width || 100) * scale;
+                const h = (elem.height || 50) * scale;
+                const style = `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;overflow:hidden;`;
+                
+                switch(elem.type) {
+                    case 'text':
+                        const fontSize = Math.max(6, (elem.fontSize || 16) * scale);
+                        return `<div style="${style}font-family:${elem.fontFamily || 'Inter'};font-size:${fontSize}px;color:${elem.color || '#333'};font-weight:${elem.bold?'bold':'normal'};line-height:1.2;pointer-events:none;">${elem.content || ''}</div>`;
+                    case 'image':
+                        return `<div style="${style}"><img src="${elem.src}" style="width:100%;height:100%;object-fit:contain;"></div>`;
+                    case 'shape':
+                        return `<div style="${style}">${renderThumbnailShape(elem.shape, elem.color || '#7c3aed')}</div>`;
+                    case 'navlink':
+                        return `<div style="${style}background:${elem.color || '#cc6699'};border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:${Math.max(6, 14 * scale)}px;"><i class="fas fa-arrow-right" style="font-size:8px;"></i></div>`;
+                    default:
+                        return '';
+                }
+            }).join('');
+        }
+        
+        function renderThumbnailShape(shape, color) {
+            switch(shape) {
+                case 'rectangle': return `<div style="width:100%;height:100%;background:${color};border-radius:2px;"></div>`;
+                case 'circle': return `<div style="width:100%;height:100%;background:${color};border-radius:50%;"></div>`;
+                case 'triangle': return `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="50,5 5,95 95,95" fill="${color}"/></svg>`;
+                case 'star': return `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="${color}"/></svg>`;
+                case 'arrow': return `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><polygon points="0,35 60,35 60,10 100,50 60,90 60,65 0,65" fill="${color}"/></svg>`;
+                default: return '';
+            }
+        }
+
+        // --- RENOMMAGE PROJET ---
+        const renameModal = document.getElementById('renameProjectModal');
+        let currentRenameId = null;
+        
+        function openRenameModal(firebaseId, currentName) {
+            currentRenameId = firebaseId;
+            document.getElementById('renameProjectInput').value = currentName;
+            renameModal.classList.add('active');
+        }
+        
+        document.getElementById('cancelRenameBtn').addEventListener('click', () => {
+            renameModal.classList.remove('active');
+            currentRenameId = null;
+        });
+        
+        document.getElementById('confirmRenameBtn').addEventListener('click', async () => {
+            const newName = document.getElementById('renameProjectInput').value.trim();
+            if (!newName || !currentRenameId) return;
+            
+            try {
+                await renommerProjet(currentRenameId, newName);
+                renameModal.classList.remove('active');
+                currentRenameId = null;
+                refreshProjects();
+            } catch(e) {
+                alert("Erreur renommage: " + e.message);
+            }
+        });
+
         // --- GESTION PROJETS ---
         async function refreshProjects() {
             const grid = document.getElementById('projectsGrid');
@@ -124,10 +235,14 @@
                     return;
                 }
 
-                grid.innerHTML = projects.map(p => `
+                grid.innerHTML = projects.map(p => {
+                    const firstSlide = p.slides && p.slides[0] ? p.slides[0] : null;
+                    const bgColor = firstSlide ? firstSlide.backgroundColor : '#fff';
+                    
+                    return `
                     <div class="project-card">
-                        <div class="project-thumbnail" style="background:${p.slides && p.slides[0] ? p.slides[0].backgroundColor : '#fff'}">
-                            <span style="color:#888; font-size:12px;">Aperçu</span>
+                        <div class="project-thumbnail" style="background:${bgColor};position:relative;overflow:hidden;">
+                            ${renderThumbnail(firstSlide)}
                         </div>
                         <div class="project-info">
                             <div class="project-name">${p.name || 'Sans titre'}</div>
@@ -138,22 +253,37 @@
                         </div>
                         <div class="project-actions">
                             <button class="project-action-btn btn-open" data-name="${p.name}">Ouvrir</button>
+                            <button class="project-action-btn btn-rename" data-id="${p.firebaseId}" data-name="${p.name}" style="background:#e3f2fd; color:#1565c0;"><i class="fas fa-pen"></i></button>
                             <button class="project-action-btn btn-delete" data-id="${p.firebaseId}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
                 // Events boutons
                 document.querySelectorAll('.btn-open').forEach(btn => {
                     btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         localStorage.setItem('current_project_name', e.currentTarget.dataset.name);
                         window.location.href = 'index.html';
+                    });
+                });
+
+                // Renommage
+                document.querySelectorAll('.btn-rename').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const firebaseId = e.currentTarget.dataset.id;
+                        const currentName = e.currentTarget.dataset.name;
+                        openRenameModal(firebaseId, currentName);
                     });
                 });
 
                 document.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         if(confirm("Supprimer ce projet du Cloud ?")) {
                             await supprimerProjetCloud(e.currentTarget.dataset.id);
                             refreshProjects();

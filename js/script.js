@@ -259,12 +259,14 @@ function setupEventListeners(){
         });
     });
     
-    // Présentation & Export
+    // Présentation & Export/Import
     document.getElementById('presentBtn')?.addEventListener('click',startPresentation);
     document.getElementById('presExit')?.addEventListener('click',exitPresentation);
-    document.getElementById('presPrev')?.addEventListener('click',()=>navigatePresentation(-1));
+    document.getElementById('presPrev')?.addEventListener('click', presentationGoBack);
     document.getElementById('presNext')?.addEventListener('click',()=>navigatePresentation(1));
     document.getElementById('exportBtn')?.addEventListener('click',exportPresentation);
+    document.getElementById('importBtn')?.addEventListener('click',importPresentation);
+    document.getElementById('importFileInput')?.addEventListener('change',handleImportFile);
     
     // Souris Canvas
     if(slideCanvas) {
@@ -1526,6 +1528,8 @@ function startPresentation(){
     state.presentationPath = buildPresentationPath();
     state.presentationStep = 0;
     state.presentationCurrentSlideIndex = state.presentationPath ? state.presentationPath[0] : 0;
+    state.presentationHistory = []; // Reset de l'historique des choix
+    updateBackButtonVisibility();
     renderPresentationSlide();
     document.addEventListener('keydown',handlePresentationKeys);
 }
@@ -1592,6 +1596,12 @@ function renderPresentationSlide(){
             e.stopPropagation();
             const targetSlideId = parseInt(navElement.dataset.targetSlideId);
             if (targetSlideId) {
+                // Sauvegarder la slide actuelle dans l'historique avant de naviguer
+                const currentSlide = state.slides[state.presentationCurrentSlideIndex];
+                if (currentSlide) {
+                    state.presentationHistory.push(currentSlide.id);
+                    updateBackButtonVisibility();
+                }
                 navigateToSlideById(targetSlideId);
             }
         });
@@ -1673,6 +1683,12 @@ function renderPresentationSlideByIndex(slideIndex) {
             e.stopPropagation();
             const targetSlideId = parseInt(navElement.dataset.targetSlideId);
             if (targetSlideId) {
+                // Sauvegarder la slide actuelle dans l'historique avant de naviguer
+                const currentSlide = state.slides[state.presentationCurrentSlideIndex];
+                if (currentSlide) {
+                    state.presentationHistory.push(currentSlide.id);
+                    updateBackButtonVisibility();
+                }
                 navigateToSlideById(targetSlideId);
             }
         });
@@ -1711,21 +1727,124 @@ function handlePresentationKeys(e){
     if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){
         navigatePresentation(1);
     }else if(e.key==='ArrowLeft'){
-        navigatePresentation(-1);
+        presentationGoBack(); // Utilise le retour par historique
     }else if(e.key==='Escape'){
         exitPresentation();
     }
 }
 
+// Fonction pour revenir en arrière dans l'historique des choix
+function presentationGoBack() {
+    if (!state.presentationHistory || state.presentationHistory.length === 0) {
+        // Si pas d'historique, navigation simple en arrière
+        navigatePresentation(-1);
+        return;
+    }
+    
+    // Récupérer la dernière slide de l'historique
+    const lastSlideId = state.presentationHistory.pop();
+    const lastIndex = state.slides.findIndex(s => s.id === lastSlideId);
+    
+    if (lastIndex !== -1) {
+        state.presentationCurrentSlideIndex = lastIndex;
+        renderPresentationSlideByIndex(lastIndex);
+    }
+    
+    updateBackButtonVisibility();
+}
+
+// Afficher/Cacher le bouton retour selon l'historique
+function updateBackButtonVisibility() {
+    const btn = document.getElementById('presPrev');
+    if (!btn) return;
+    
+    // Toujours visible mais avec un style différent si historique vide
+    if (state.presentationHistory && state.presentationHistory.length > 0) {
+        btn.style.opacity = '1';
+        btn.title = 'Revenir au choix précédent';
+    } else if (state.presentationCurrentSlideIndex > 0) {
+        btn.style.opacity = '0.6';
+        btn.title = 'Slide précédente';
+    } else {
+        btn.style.opacity = '0.3';
+        btn.title = 'Début de la présentation';
+    }
+}
+
 function exportPresentation(){
+    const projectName = localStorage.getItem('current_project_name') || 'presentation';
     const data=JSON.stringify(state.slides,null,2);
     const blob=new Blob([data],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download='presentation.json';
+    a.download=`${projectName}.json`;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+// Importer une présentation depuis un fichier JSON
+function importPresentation() {
+    const fileInput = document.getElementById('importFileInput');
+    fileInput.click();
+}
+
+function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedSlides = JSON.parse(e.target.result);
+            
+            // Vérifier que c'est un tableau valide
+            if (!Array.isArray(importedSlides)) {
+                alert('Fichier invalide : le format attendu est un tableau de slides.');
+                return;
+            }
+            
+            // Vérifier la structure basique des slides
+            const isValid = importedSlides.every(slide => 
+                slide.id !== undefined && 
+                Array.isArray(slide.elements)
+            );
+            
+            if (!isValid) {
+                alert('Fichier invalide : structure de slides incorrecte.');
+                return;
+            }
+            
+            // Remplacer les slides actuelles par les slides importées
+            state.slides = importedSlides;
+            state.currentSlideIndex = 0;
+            state.selectedElement = null;
+            
+            // Synchroniser les connexions depuis les navlinks importés
+            treeState.connections = [];
+            syncConnectionsFromNavLinks();
+            
+            // Mettre à jour l'interface
+            updateSlidesList();
+            renderCurrentSlide();
+            updateSlideCounter();
+            hideElementProperties();
+            
+            // Sauvegarder le projet importé
+            saveProject();
+            
+            alert(`Présentation importée avec succès ! ${importedSlides.length} slide(s) chargée(s).`);
+            
+        } catch (error) {
+            console.error('Erreur lors de l\'import:', error);
+            alert('Erreur lors de l\'importation du fichier. Vérifiez que c\'est un fichier JSON valide.');
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset l'input pour permettre de réimporter le même fichier
+    event.target.value = '';
 }
 
 function goBackInPreview() {}
