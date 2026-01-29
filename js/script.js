@@ -573,16 +573,16 @@ function addImageFromUrl(){
 // ==========================================
 
 function showElementProperties(){
-    if(!state.selectedElement)return;
-    elementProperties.style.display='block';
-
-    const textContentRow = document.getElementById('textContentRow');
-    const navLinkRow = document.getElementById('navLinkRow');
-    const navLinkLabelRow = document.getElementById('navLinkLabelRow');
-    const navLinkColorRow = document.getElementById('navLinkColorRow');
-    const shapeColorRow = document.getElementById('shapeColorRow');
-    const shapeRotationRow = document.getElementById('shapeRotationRow');
-
+    if(!state.selectedElement)return; // Sécurité
+    elementProperties.style.display='block';// Afficher le panneau
+    //Récupération des sections DOM
+    const textContentRow = document.getElementById('textContentRow');   // Contenu Texte
+    const navLinkRow = document.getElementById('navLinkRow');           // Cible NavLink
+    const navLinkLabelRow = document.getElementById('navLinkLabelRow'); // Libellé NavLink
+    const navLinkColorRow = document.getElementById('navLinkColorRow'); // Couleur NavLink
+    const shapeColorRow = document.getElementById('shapeColorRow');     // Couleur Shape
+    const shapeRotationRow = document.getElementById('shapeRotationRow');// Rotation Shape
+    //Réinitialisation complète de l’interface
     if(textContentRow) textContentRow.style.display = 'none';
     if(navLinkRow) navLinkRow.style.display = 'none';
     if(navLinkLabelRow) navLinkLabelRow.style.display = 'none';
@@ -590,22 +590,22 @@ function showElementProperties(){
     if(shapeColorRow) shapeColorRow.style.display = 'none';
     if(shapeRotationRow) shapeRotationRow.style.display = 'none';
 
-    if(state.selectedElement.type === 'text'){
-        if(textContentRow) textContentRow.style.display = 'flex';
+    if(state.selectedElement.type === 'text'){                  // Afficher les options texte
+        if(textContentRow) textContentRow.style.display = 'flex';//mise en page responsive
         showTextTools();
-    } else {
+    } else { //
         hideTextTools();
-        if(state.selectedElement.type === 'navlink'){
+        if(state.selectedElement.type === 'navlink'){  // Afficher les options navlink
             if(navLinkRow) navLinkRow.style.display = 'flex';
             if(navLinkLabelRow) navLinkLabelRow.style.display = 'flex';
             if(navLinkColorRow) navLinkColorRow.style.display = 'flex';
             populateTargetSlideSelect();
-        } else if(state.selectedElement.type === 'shape'){
+        } else if(state.selectedElement.type === 'shape'){ // Afficher les options shape
             if(shapeColorRow) shapeColorRow.style.display = 'flex';
             if(shapeRotationRow) shapeRotationRow.style.display = 'flex';
         }
     }
-    updatePropertiesInputs();
+    updatePropertiesInputs(); // Mettre à jour les valeurs des inputs
 }
 
 function hideElementProperties(){ 
@@ -626,41 +626,41 @@ function hideTextTools(){
     if(tools) tools.style.display = 'none';
 }
 
-function updateTextToolsState(){
-    if(!state.selectedElement || state.selectedElement.type !== 'text') return;
-    document.getElementById('boldBtn').classList.toggle('active', state.selectedElement.bold);
+function updateTextToolsState(){ // Met à jour l'état des boutons de formatage. Agit comme un pont entre l’état interne (state) et l’interface utilisateur.
+    if(!state.selectedElement || state.selectedElement.type !== 'text') return; //élément est bien sélectionné et de type text
+    document.getElementById('boldBtn').classList.toggle('active', state.selectedElement.bold);//Synchronisation des boutons de style (bold / italic / underline)
     document.getElementById('italicBtn').classList.toggle('active', state.selectedElement.italic);
     document.getElementById('underlineBtn').classList.toggle('active', state.selectedElement.underline);
-    document.getElementById('fontSelect').value = state.selectedElement.fontFamily;
+    document.getElementById('fontSelect').value = state.selectedElement.fontFamily;//Synchronisation des sélecteurs (font, taille, couleur)
     document.getElementById('fontSizeSelect').value = state.selectedElement.fontSize;
     document.getElementById('textColorPicker').value = state.selectedElement.color;
 }
 
-function updatePropertiesInputs(){
-    if(!state.selectedElement)return;
+function updatePropertiesInputs(){ //garantit que l’interface utilisateur reflète toujours exactement les données stockées dans le modèle.
+    if(!state.selectedElement)return; //Synchronisation (position & taille)
     document.getElementById('elemX').value=state.selectedElement.x;
     document.getElementById('elemY').value=state.selectedElement.y;
     document.getElementById('elemWidth').value=state.selectedElement.width;
     document.getElementById('elemHeight').value=state.selectedElement.height;
 
-    if(state.selectedElement.type === 'text'){
-        const content = state.selectedElement.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
-        document.getElementById('elemTextContent').value = content;
+    if(state.selectedElement.type === 'text'){                                                               // Contenu Texte
+        const content = state.selectedElement.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ''); // Convertir les sauts de ligne HTML en sauts de ligne texte
+        document.getElementById('elemTextContent').value = content;                                          // Mettre à jour le contenu texte
     }
     if(state.selectedElement.type === 'navlink'){
-        document.getElementById('targetSlideSelect').value = state.selectedElement.targetSlideId || '';
-        document.getElementById('navLinkLabel').value = state.selectedElement.label || '';
+        document.getElementById('targetSlideSelect').value = state.selectedElement.targetSlideId || ''; // Cible NavLink
+        document.getElementById('navLinkLabel').value = state.selectedElement.label || ''; // Libellé NavLink
         const navColor = state.selectedElement.color || '#cc6699';
         document.getElementById('navLinkColor').value = navColor;
         // Mettre à jour le preset actif
-        document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.color.toLowerCase() === navColor.toLowerCase());
+        document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(btn => { //Mise à jour des presets de couleur
+            btn.classList.toggle('active', btn.dataset.color.toLowerCase() === navColor.toLowerCase()); //compare sa couleur à celle du navlink sélectionné afin d’afficher lequel est actif.
         });
     }
     if(state.selectedElement.type === 'shape'){
-        document.getElementById('shapeColor').value = state.selectedElement.color || '#7c3aed';
-        document.getElementById('shapeRotation').value = state.selectedElement.rotation || 0;
-        document.getElementById('rotationValue').textContent = (state.selectedElement.rotation || 0) + '°';
+        document.getElementById('shapeColor').value = state.selectedElement.color || '#7c3aed'; // Couleur Shape de base
+        document.getElementById('shapeRotation').value = state.selectedElement.rotation || 0; // Rotation Shape de base
+        document.getElementById('rotationValue').textContent = (state.selectedElement.rotation || 0) + '°'; // Affichage valeur rotation
     }
 }
 
@@ -856,25 +856,26 @@ function startResize(e){
 }
 
 function handleMouseMove(e){
-    if(state.isDragging&&state.selectedElement&&!state.isEditing){
-        const canvasRect=slideCanvas.getBoundingClientRect();
-        let newX=e.clientX-canvasRect.left-state.dragOffset.x;
+    if(state.isDragging&&state.selectedElement&&!state.isEditing){ //drag est désactivé pendant l’édition
+        const canvasRect=slideCanvas.getBoundingClientRect();       //Calcul de la position relative au canvas
+        //       position souris écran - décalage du canvas - distance entre la souris et le coin de l’élément au moment du clic
+        let newX=e.clientX-canvasRect.left-state.dragOffset.x; 
         let newY=e.clientY-canvasRect.top-state.dragOffset.y;
-        state.selectedElement.x=Math.round(newX);
+        state.selectedElement.x=Math.round(newX); //Arrondi pour éviter les valeurs décimales
         state.selectedElement.y=Math.round(newY);
-        renderCurrentSlide();
-        updatePropertiesInputs();
+        renderCurrentSlide(); //le canvas est mis à jour visuellement
+        updatePropertiesInputs(); //le panneau de propriétés reste synchronisé
     }
-    if(state.isResizing&&state.selectedElement){
-        const dx=e.clientX-state.startX;
+    if(state.isResizing&&state.selectedElement){ //redimensionnement
+        const dx=e.clientX-state.startX; //mesure le déplacement de la souris depuis le début du resize.
         const dy=e.clientY-state.startY;
-        const handle=state.resizeHandle;
+        const handle=state.resizeHandle; //identifie quel coin est utilisé pour le redimensionnement.
         let newWidth=state.startWidth;
         let newHeight=state.startHeight;
-
-        if(handle.includes('e'))newWidth=Math.max(20,state.startWidth+dx);
-        if(handle.includes('s'))newHeight=Math.max(20,state.startHeight+dy);
-
+        //Calcul des nouvelles dimensions en fonction du coin utilisé
+        if(handle.includes('e'))newWidth=Math.max(20,state.startWidth+dx); //largeur minimale de 20px et longueur minimale de 20px
+        if(handle.includes('s'))newHeight=Math.max(20,state.startHeight+dy); //taille minimale est imposée pour préserver la cohérence visuelle
+        //Mise à jour de l’état + rendu
         state.selectedElement.width=Math.round(newWidth);
         state.selectedElement.height=Math.round(newHeight);
         renderCurrentSlide();
