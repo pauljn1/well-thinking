@@ -31,7 +31,7 @@ const state = {
 let treeState = {
     connections: [],          // Liste des connexions (générées automatiquement depuis les navlinks)
     zoom: 1,                  // Niveau de zoom (1 = 100%)
-    
+
     // Variables pour le déplacement des nœuds
     isDraggingSlide: false,
     currentDragSlide: null,
@@ -40,7 +40,7 @@ let treeState = {
     startY: 0,
     initialLeft: 0,
     initialTop: 0,
-    
+
     // Variables pour le pan (déplacement de la vue)
     isPanning: false,
     panStartX: 0,
@@ -67,7 +67,7 @@ const presentationMode = document.getElementById('presentationMode');
 document.addEventListener('DOMContentLoaded', () => {
     // 1. On active les boutons tout de suite
     setupEventListeners();
-    
+
     // 2. On affiche la slide par défaut (pour éviter l'écran vide)
     renderCurrentSlide();
     updateSlidesList();
@@ -138,7 +138,7 @@ async function saveProject() {
 
     try {
         await sauvegarderProjet(currentProjectName, dataToSave);
-        
+
         // Feedback visuel
         const btn = document.getElementById('saveBtn');
         if(btn) {
@@ -169,11 +169,11 @@ function setupEventListeners(){
     document.getElementById('addImageBtnSide')?.addEventListener('click',()=>imageModal.classList.add('active'));
     document.getElementById('addShapeBtnSide')?.addEventListener('click',()=>shapeModal.classList.add('active'));
     document.getElementById('addNavLinkBtnSide')?.addEventListener('click',addNavLinkElement);
-    
+
     // Menu Slides
     const addSlideBtn = document.getElementById('addSlideBtn');
     if(addSlideBtn) addSlideBtn.addEventListener('click', toggleAddSlideDropdown);
-    
+
     document.querySelectorAll('#addSlideDropdown .dropdown-item').forEach(item => {
         item.addEventListener('click', () => {
             addSlideFromTemplate(item.dataset.template);
@@ -189,16 +189,16 @@ function setupEventListeners(){
     document.getElementById('nextSlide')?.addEventListener('click',nextSlide);
     document.getElementById('canvasArrowLeft')?.addEventListener('click',previousSlide);
     document.getElementById('canvasArrowRight')?.addEventListener('click',nextSlide);
-    
+
     // Vues
     document.getElementById('listViewBtn')?.addEventListener('click',()=>switchView('list'));
     document.getElementById('treeFullscreenBtn')?.addEventListener('click',openTreeFullscreen);
     document.getElementById('closeTreeBtn')?.addEventListener('click',closeTreeFullscreen);
-    
+
     // ARBORESCENCE
     document.getElementById('addSlideTreeBtn')?.addEventListener('click', addSlideFromTree);
     document.getElementById('resetTreeBtn')?.addEventListener('click', resetTreeLayout);
-    
+
     // Zoom
     document.getElementById('zoomInBtn')?.addEventListener('click', () => zoomTree(0.1));
     document.getElementById('zoomOutBtn')?.addEventListener('click', () => zoomTree(-0.1));
@@ -206,6 +206,8 @@ function setupEventListeners(){
 
     // Aperçu
     document.getElementById('previewTreeBtn')?.addEventListener('click', startPresentationFromTree);
+    document.getElementById('scenarioPreviewBack')?.addEventListener('click', goBackInPreview);
+    document.getElementById('closeScenarioPreview')?.addEventListener('click', closeScenarioPreview);
 
     // Formatage & Inputs
     document.getElementById('boldBtn')?.addEventListener('click',()=>toggleFormat('bold'));
@@ -214,12 +216,12 @@ function setupEventListeners(){
     document.getElementById('alignLeftBtn')?.addEventListener('click',()=>setTextAlign('left'));
     document.getElementById('alignCenterBtn')?.addEventListener('click',()=>setTextAlign('center'));
     document.getElementById('alignRightBtn')?.addEventListener('click',()=>setTextAlign('right'));
-    
+
     document.getElementById('textColorPicker')?.addEventListener('input',e=>setTextColor(e.target.value));
     document.getElementById('slideBgColor')?.addEventListener('input',e=>setSlideBgColor(e.target.value));
     document.getElementById('fontSelect')?.addEventListener('change',e=>setFont(e.target.value));
     document.getElementById('fontSizeSelect')?.addEventListener('change',e=>setFontSize(e.target.value));
-    
+
     // Modales
     document.querySelectorAll('.shape-option').forEach(btn=>{
         btn.addEventListener('click',()=>{
@@ -231,7 +233,7 @@ function setupEventListeners(){
     document.getElementById('imageInput')?.addEventListener('change',handleImageUpload);
     document.getElementById('addImageFromUrl')?.addEventListener('click',addImageFromUrl);
     document.getElementById('closeImageModal')?.addEventListener('click',()=>imageModal.classList.remove('active'));
-    
+
     // Propriétés Élément
     document.getElementById('elemX')?.addEventListener('input',updateElementPosition);
     document.getElementById('elemY')?.addEventListener('input',updateElementPosition);
@@ -244,7 +246,7 @@ function setupEventListeners(){
     document.getElementById('shapeColor')?.addEventListener('input',updateShapeColor);
     document.getElementById('shapeRotation')?.addEventListener('input',updateShapeRotation);
     document.getElementById('deleteElement')?.addEventListener('click',deleteSelectedElement);
-    
+
     // Color presets pour navlink
     document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -256,7 +258,7 @@ function setupEventListeners(){
             btn.classList.add('active');
         });
     });
-    
+
     // Présentation & Export
     document.getElementById('presentBtn')?.addEventListener('click',startPresentation);
     document.getElementById('presExit')?.addEventListener('click',exitPresentation);
@@ -265,7 +267,7 @@ function setupEventListeners(){
     document.getElementById('exportBtn')?.addEventListener('click',exportPresentation);
     document.getElementById('importBtn')?.addEventListener('click',importPresentation);
     document.getElementById('importFileInput')?.addEventListener('change',handleImportFile);
-    
+
     // Souris Canvas
     if(slideCanvas) {
         slideCanvas.addEventListener('mousedown',handleCanvasMouseDown);
@@ -273,10 +275,10 @@ function setupEventListeners(){
     }
     document.addEventListener('mousemove',handleMouseMove);
     document.addEventListener('mouseup',handleMouseUp);
-    
+
     if(shapeModal) shapeModal.addEventListener('click',e=>{if(e.target===shapeModal)shapeModal.classList.remove('active')});
     if(imageModal) imageModal.addEventListener('click',e=>{if(e.target===imageModal)imageModal.classList.remove('active')});
-    
+
     document.addEventListener('keydown', handleKeyboardShortcuts);
 }
 
@@ -318,7 +320,7 @@ function closeAddSlideDropdown(){ document.getElementById('addSlideDropdown').cl
 function addSlideFromTemplate(template){
     saveToHistory();
     const slide = {id: Date.now(), backgroundColor: '#ffffff', elements: [], treeX: null, treeY: null};
-    
+
     // Logique simplifiée des templates pour l'exemple
     if(template === 'title') {
         slide.elements.push({id: Date.now(), type: 'text', x: 80, y: 200, width: 800, height: 80, content: 'Titre', fontFamily: 'Inter', fontSize: 48, color: '#1e1e1e', bold: true});
@@ -326,7 +328,7 @@ function addSlideFromTemplate(template){
         slide.elements.push({id: Date.now(), type: 'text', x: 80, y: 60, width: 800, height: 60, content: 'Titre', fontFamily: 'Inter', fontSize: 40, color: '#1e1e1e', bold: true});
         slide.elements.push({id: Date.now()+1, type: 'text', x: 80, y: 150, width: 800, height: 300, content: 'Contenu...', fontFamily: 'Inter', fontSize: 20, color: '#333'});
     }
-    
+
     state.slides.push(slide);
     state.currentSlideIndex = state.slides.length - 1;
     updateSlidesList();
@@ -426,17 +428,17 @@ function renderCurrentSlide(){
 function renderSlideContent(slide, options = {}) {
     const { isThumbnail = false, scale = 1 } = options;
     if (!slide || !slide.elements) return '';
-    
+
     return slide.elements.map(elem => {
         const x = elem.x * scale;
         const y = elem.y * scale;
         const width = elem.width * scale;
         const height = elem.height * scale;
         const style = `left:${x}px;top:${y}px;width:${width}px;height:${height}px;`;
-        
+
         const selected = !isThumbnail && state.selectedElement?.id === elem.id ? 'selected' : '';
         const resizeHandles = (!isThumbnail && selected) ? `<div class="resize-handle nw"></div><div class="resize-handle ne"></div><div class="resize-handle sw"></div><div class="resize-handle se"></div>` : '';
-        
+
         switch(elem.type) {
             case 'text': {
                 const fontSize = (elem.fontSize || 24) * scale;
@@ -527,10 +529,10 @@ function addNavLinkElement(){
     };
     state.slides[state.currentSlideIndex].elements.push(element);
     state.selectedElement = element;
-    
+
     // Synchroniser automatiquement les connexions de l'arborescence
     syncConnectionsFromNavLinks();
-    
+
     renderCurrentSlide();
     showElementProperties();
     saveProject();
@@ -573,21 +575,21 @@ function addImageFromUrl(){
 function showElementProperties(){
     if(!state.selectedElement)return;
     elementProperties.style.display='block';
-    
+
     const textContentRow = document.getElementById('textContentRow');
     const navLinkRow = document.getElementById('navLinkRow');
     const navLinkLabelRow = document.getElementById('navLinkLabelRow');
     const navLinkColorRow = document.getElementById('navLinkColorRow');
     const shapeColorRow = document.getElementById('shapeColorRow');
     const shapeRotationRow = document.getElementById('shapeRotationRow');
-    
+
     if(textContentRow) textContentRow.style.display = 'none';
     if(navLinkRow) navLinkRow.style.display = 'none';
     if(navLinkLabelRow) navLinkLabelRow.style.display = 'none';
     if(navLinkColorRow) navLinkColorRow.style.display = 'none';
     if(shapeColorRow) shapeColorRow.style.display = 'none';
     if(shapeRotationRow) shapeRotationRow.style.display = 'none';
-    
+
     if(state.selectedElement.type === 'text'){
         if(textContentRow) textContentRow.style.display = 'flex';
         showTextTools();
@@ -640,7 +642,7 @@ function updatePropertiesInputs(){
     document.getElementById('elemY').value=state.selectedElement.y;
     document.getElementById('elemWidth').value=state.selectedElement.width;
     document.getElementById('elemHeight').value=state.selectedElement.height;
-    
+
     if(state.selectedElement.type === 'text'){
         const content = state.selectedElement.content.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
         document.getElementById('elemTextContent').value = content;
@@ -704,17 +706,17 @@ function updateNavLinkTarget(){
         const currentSlideId = state.slides[state.currentSlideIndex].id;
         const oldTargetId = state.selectedElement.targetSlideId;
         const newTargetId = parseInt(document.getElementById('targetSlideSelect').value);
-        
+
         // Supprimer l'ancienne connexion si elle existe
         if(oldTargetId) {
             removeNavLinkConnection(currentSlideId, oldTargetId);
         }
-        
+
         state.selectedElement.targetSlideId = newTargetId;
-        
+
         // Créer la nouvelle connexion automatiquement
         syncConnectionsFromNavLinks();
-        
+
         saveProject();
     }
 }
@@ -763,7 +765,7 @@ function deleteSelectedElement(){
         if(state.selectedElement.type === 'navlink' && state.selectedElement.targetSlideId) {
             removeNavLinkConnection(slide.id, state.selectedElement.targetSlideId);
         }
-        
+
         slide.elements.splice(index,1);
         state.selectedElement=null;
         renderCurrentSlide();
@@ -817,7 +819,7 @@ function setupElementEvents(elem){
             startDrag(e);
         }
     });
-    
+
     elem.addEventListener('dblclick',e=>{
         if(elem.classList.contains('text-element')){
             e.stopPropagation();
@@ -869,10 +871,10 @@ function handleMouseMove(e){
         const handle=state.resizeHandle;
         let newWidth=state.startWidth;
         let newHeight=state.startHeight;
-        
+
         if(handle.includes('e'))newWidth=Math.max(20,state.startWidth+dx);
         if(handle.includes('s'))newHeight=Math.max(20,state.startHeight+dy);
-        
+
         state.selectedElement.width=Math.round(newWidth);
         state.selectedElement.height=Math.round(newHeight);
         renderCurrentSlide();
@@ -906,19 +908,19 @@ function handleCanvasMouseDown(e){
 }
 
 // ==========================================
-// 7. ARBORESCENCE
+// 7. ARBORESCENCE AVANCÉE (Correction toggleConnectMode)
 // ==========================================
 
 function openTreeFullscreen() {
     document.getElementById('treeFullscreen').classList.add('active');
-    
+
     // Synchroniser les connexions depuis les éléments navlink avant d'afficher
     syncConnectionsFromNavLinks();
-    
+
     // Réinitialiser le zoom
     treeState.zoom = 1;
     applyZoom();
-    
+
     renderTreeNodes();
     drawConnections();
     setupScenarioEvents();
@@ -941,7 +943,7 @@ function setupScenarioEvents() {
     scenarioMouseDownHandler = handleScenarioMouseDown;
     document.addEventListener('mousemove', scenarioMouseMoveHandler);
     document.addEventListener('mouseup', scenarioMouseUpHandler);
-    
+
     const treeCanvas = document.getElementById('treeCanvas');
     if (treeCanvas) {
         // Zoom avec la molette (Ctrl + scroll)
@@ -974,12 +976,12 @@ function cleanupScenarioEvents() {
 // Démarrer le pan quand on clique sur le fond du canvas
 function handleScenarioMouseDown(e) {
     const treeCanvas = document.getElementById('treeCanvas');
-    
+
     // Ne pas démarrer le pan si on clique sur une slide ou un élément interactif
     if (e.target.closest('.scenario-slide-card') || e.target.closest('.tree-tool-btn')) {
         return;
     }
-    
+
     // Démarrer le pan (clic gauche ou molette)
     if (e.button === 0 || e.button === 1) {
         e.preventDefault();
@@ -1019,7 +1021,7 @@ function applyZoom() {
     const treeNodes = document.getElementById('treeNodes');
     const treeSvg = document.getElementById('treeSvg');
     const zoomLabel = document.getElementById('zoomLevel');
-    
+
     if (treeNodes) {
         treeNodes.style.transform = `scale(${treeState.zoom})`;
         treeNodes.style.transformOrigin = 'top left';
@@ -1050,29 +1052,29 @@ function handleScenarioMouseMove(e) {
     // Déplacement d'une slide
     if (treeState.isDraggingSlide && treeState.currentDragSlide) {
         e.preventDefault();
-        
+
         // Compenser le zoom : le mouvement écran doit être divisé par le zoom
         const zoom = treeState.zoom || 1;
         const dx = (e.clientX - treeState.startX) / zoom;
         const dy = (e.clientY - treeState.startY) / zoom;
-        
+
         let newX = treeState.initialLeft + dx;
         let newY = treeState.initialTop + dy;
-        
+
         // Limiter aux bords
         newX = Math.max(20, newX);
         newY = Math.max(20, newY);
-        
+
         treeState.currentDragSlide.style.left = newX + 'px';
         treeState.currentDragSlide.style.top = newY + 'px';
-        
+
         // Mettre à jour la position dans state.slides
         const slideData = state.slides.find(s => s.id == treeState.currentDragSlideId);
         if (slideData) {
             slideData.treeX = newX;
             slideData.treeY = newY;
         }
-        
+
         drawConnections();
     }
 }
@@ -1085,7 +1087,7 @@ function handleScenarioMouseUp(e) {
         const canvas = document.getElementById('treeCanvas');
         if (canvas) canvas.style.cursor = 'grab';
     }
-    
+
     // Fin du drag d'une slide
     if (treeState.isDraggingSlide) {
         treeState.isDraggingSlide = false;
@@ -1103,14 +1105,14 @@ function renderTreeNodes() {
     const container = document.getElementById('treeNodes');
     if (!container) return;
     container.innerHTML = '';
-    
+
     state.slides.forEach((slide, index) => {
         if (slide.treeX === null || slide.treeX === undefined) {
             const cols = Math.ceil(Math.sqrt(state.slides.length * 1.5));
             slide.treeX = 100 + (index % cols) * 300;
             slide.treeY = 100 + Math.floor(index / cols) * 200;
         }
-        
+
         const card = createScenarioSlideCard(slide, index);
         container.appendChild(card);
     });
@@ -1119,15 +1121,15 @@ function renderTreeNodes() {
 function createScenarioSlideCard(slide, index) {
     const card = document.createElement('div');
     const isCurrent = index === state.currentSlideIndex;
-    
+
     card.className = 'scenario-slide-card' + (isCurrent ? ' current' : '');
     card.dataset.slideId = slide.id;
     card.dataset.index = index;
     card.style.left = slide.treeX + 'px';
     card.style.top = slide.treeY + 'px';
-    
+
     const previewContent = generateScenarioPreview(slide);
-    
+
     card.innerHTML = `
         <div class="scenario-card-header">
             <span class="scenario-card-title">Slide ${index + 1}</span>
@@ -1137,19 +1139,19 @@ function createScenarioSlideCard(slide, index) {
             ${previewContent}
         </div>
     `;
-    
+
     setupScenarioCardEvents(card, slide, index);
-    
+
     return card;
 }
 
 function generateScenarioPreview(slide) {
     let html = '<div class="scenario-preview" style="background:' + slide.backgroundColor + ';">';
-    
+
     slide.elements.slice(0, 4).forEach(elem => {
         const scale = 0.12;
         const style = `position:absolute;left:${elem.x * scale}px;top:${elem.y * scale}px;width:${elem.width * scale}px;height:${elem.height * scale}px;overflow:hidden;`;
-        
+
         switch(elem.type) {
             case 'text':
                 html += `<div style="${style}font-size:${Math.max(3, elem.fontSize * scale)}px;color:${elem.color};">${elem.content.substring(0, 20)}</div>`;
@@ -1162,31 +1164,31 @@ function generateScenarioPreview(slide) {
                 break;
         }
     });
-    
+
     html += '</div>';
     return html;
 }
 
 function setupScenarioCardEvents(card, slide, index) {
     const handle = card.querySelector('.scenario-handle');
-    
+
     // Drag par la poignée
     handle.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         treeState.isDraggingSlide = true;
         treeState.currentDragSlide = card;
         treeState.currentDragSlideId = slide.id;
-        
+
         treeState.startX = e.clientX;
         treeState.startY = e.clientY;
         treeState.initialLeft = card.offsetLeft;
         treeState.initialTop = card.offsetTop;
-        
+
         card.style.zIndex = '100';
         card.classList.add('dragging');
         document.body.style.cursor = 'grabbing';
     });
-    
+
     // Double-clic pour éditer la slide
     card.addEventListener('dblclick', () => {
         state.currentSlideIndex = index;
@@ -1195,7 +1197,7 @@ function setupScenarioCardEvents(card, slide, index) {
         updateSlideCounter();
         closeTreeFullscreen();
     });
-    
+
     // Clic simple pour sélectionner
     card.addEventListener('click', (e) => {
         if (!e.target.closest('.scenario-handle')) {
@@ -1210,16 +1212,16 @@ function syncConnectionsFromNavLinks() {
     // Parcourir toutes les slides et leurs éléments navlink
     state.slides.forEach(slide => {
         const navlinks = slide.elements.filter(el => el.type === 'navlink' && el.targetSlideId);
-        
+
         navlinks.forEach(navlink => {
             const fromId = slide.id;
             const toId = navlink.targetSlideId;
-            
+
             // Vérifier si la connexion existe déjà
             const existingIndex = treeState.connections.findIndex(c => 
                 c.from == fromId && c.to == toId && c.navLinkId == navlink.id
             );
-            
+
             if (existingIndex !== -1) {
                 // Mettre à jour la couleur si elle a changé
                 treeState.connections[existingIndex].color = navlink.color || '#cc6699';
@@ -1231,15 +1233,15 @@ function syncConnectionsFromNavLinks() {
                     from: fromId,
                     to: toId,
                     label: navlink.label || '',
-                    color: navlink.color || '#cc6699',
-                    fromNavLink: true,
+                    color: navlink.color || '#cc6699',  // Utiliser la couleur du navlink
+                    fromNavLink: true,  // Marqueur pour identifier les connexions auto
                     navLinkId: navlink.id
                 };
                 treeState.connections.push(connection);
             }
         });
     });
-    
+
     // Redessiner les connexions si la vue arborescence est ouverte
     if (document.getElementById('treeFullscreen')?.classList.contains('active')) {
         drawConnections();
@@ -1251,7 +1253,7 @@ function removeNavLinkConnection(slideId, targetSlideId) {
     treeState.connections = treeState.connections.filter(c => 
         !(c.from == slideId && c.to == targetSlideId && c.fromNavLink)
     );
-    
+
     if (document.getElementById('treeFullscreen')?.classList.contains('active')) {
         drawConnections();
     }
@@ -1260,11 +1262,11 @@ function removeNavLinkConnection(slideId, targetSlideId) {
 function drawConnections() {
     const svg = document.getElementById('treeSvg');
     if (!svg) return;
-    
+
     svg.innerHTML = '';
-    
+
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    
+
     // Créer les filtres et styles de base
     let defsContent = `
         <filter id="arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -1278,14 +1280,14 @@ function drawConnections() {
             </feMerge>
         </filter>
     `;
-    
+
     // Créer des marqueurs dynamiques pour chaque couleur de connexion
     const usedColors = new Set();
     treeState.connections.forEach(conn => {
         const color = conn.color || '#cc6699';
         usedColors.add(color);
     });
-    
+
     usedColors.forEach(color => {
         const colorId = color.replace('#', '');
         defsContent += `
@@ -1294,56 +1296,59 @@ function drawConnections() {
             </marker>
         `;
     });
-    
+
     defs.innerHTML = defsContent;
     svg.appendChild(defs);
-    
+
     treeState.connections.forEach((conn, index) => {
         const fromSlide = state.slides.find(s => s.id == conn.from);
         const toSlide = state.slides.find(s => s.id == conn.to);
-        
+
         if (!fromSlide || !toSlide) return;
-        
+
         const fromCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.from}"]`);
         const toCard = document.querySelector(`.scenario-slide-card[data-slide-id="${conn.to}"]`);
-        
+
         if (!fromCard || !toCard) return;
-                
+
+        // Utiliser les positions stockées dans les données des slides (pas affectées par le zoom)
+        const zoom = treeState.zoom || 1;
+
         // Obtenir les dimensions des cartes (sans zoom) - correspond au CSS
         const cardWidth = 260;  // Largeur fixe des cartes scenario
         const cardHeight = 150; // Hauteur minimale des cartes scenario
-        
+
         // Positions des cartes depuis les données (coordonnées dans l'espace non-zoomé)
         const fromX = fromSlide.treeX;
         const fromY = fromSlide.treeY;
         const toX = toSlide.treeX;
         const toY = toSlide.treeY;
-        
+
         // Calculer les centres des cartes
         const fromCenterX = fromX + cardWidth / 2;
         const fromCenterY = fromY + cardHeight / 2;
         const toCenterX = toX + cardWidth / 2;
         const toCenterY = toY + cardHeight / 2;
-        
+
         // Calculer la différence de position
         const dx = toCenterX - fromCenterX;
         const dy = toCenterY - fromCenterY;
-        
+
         // Déterminer le meilleur côté pour la connexion
         let x1, y1, x2, y2;
         let exitSide, entrySide;
-        
+
         // Calculer les bords des cartes (dans l'espace non-zoomé)
         const fromLeft = fromX;
         const fromRight = fromX + cardWidth;
         const fromTop = fromY;
         const fromBottom = fromY + cardHeight;
-        
+
         const toLeft = toX;
         const toRight = toX + cardWidth;
         const toTop = toY;
         const toBottom = toY + cardHeight;
-        
+
         // Déterminer la direction principale (horizontale ou verticale)
         if (Math.abs(dx) > Math.abs(dy)) {
             // Connexion principalement horizontale
@@ -1384,19 +1389,20 @@ function drawConnections() {
                 entrySide = 'bottom';
             }
         }
-        
+
         // Couleur de la connexion
         const connColor = conn.color || '#cc6699';
         const colorId = connColor.replace('#', '');
-        
+
         // Créer un groupe pour la connexion
         const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         group.classList.add('connection-group');
         group.dataset.connectionId = conn.id;
-        
-        // Points de contrôle pour la courbe de Bézier        let cp1x, cp1y, cp2x, cp2y;
+
+        // Calculer les points de contrôle pour une courbe de Bézier élégante
+        let cp1x, cp1y, cp2x, cp2y;
         const curveStrength = Math.min(Math.abs(dx), Math.abs(dy), 80) + 40;
-        
+
         if (exitSide === 'right') {
             cp1x = x1 + curveStrength;
             cp1y = y1;
@@ -1410,7 +1416,7 @@ function drawConnections() {
             cp1x = x1;
             cp1y = y1 - curveStrength;
         }
-        
+
         if (entrySide === 'left') {
             cp2x = x2 - curveStrength;
             cp2y = y2;
@@ -1424,9 +1430,9 @@ function drawConnections() {
             cp2x = x2;
             cp2y = y2 + curveStrength;
         }
-        
+
         const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
-        
+
         // Créer une ligne d'arrière-plan pour l'effet de glow
         const pathBg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         pathBg.setAttribute('d', d);
@@ -1437,7 +1443,7 @@ function drawConnections() {
         pathBg.setAttribute('opacity', '0.15');
         pathBg.classList.add('connection-bg');
         group.appendChild(pathBg);
-        
+
         // Créer la ligne principale avec la couleur complète
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
@@ -1447,20 +1453,20 @@ function drawConnections() {
         path.setAttribute('stroke-linecap', 'round');
         path.setAttribute('marker-end', `url(#arrowhead-${colorId})`);
         path.classList.add('scenario-connection-line');
-        
+
         if (conn.fromNavLink) {
             path.classList.add('navlink-connection');
         }
-        
+
         group.appendChild(path);
-        
+
         // Ajouter un label si présent
         if (conn.label) {
             // Calculer le point milieu de la courbe de Bézier
             const t = 0.5;
             const midX = Math.pow(1-t,3)*x1 + 3*Math.pow(1-t,2)*t*cp1x + 3*(1-t)*Math.pow(t,2)*cp2x + Math.pow(t,3)*x2;
             const midY = Math.pow(1-t,3)*y1 + 3*Math.pow(1-t,2)*t*cp1y + 3*(1-t)*Math.pow(t,2)*cp2y + Math.pow(t,3)*y2 - 12;
-            
+
             // Fond du label
             const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             const textLength = conn.label.length * 7 + 16;
@@ -1474,7 +1480,7 @@ function drawConnections() {
             labelBg.setAttribute('opacity', '0.9');
             labelBg.classList.add('connection-label-bg');
             group.appendChild(labelBg);
-            
+
             // Texte du label
             const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             label.setAttribute('x', midX);
@@ -1488,7 +1494,7 @@ function drawConnections() {
             label.classList.add('connection-label');
             group.appendChild(label);
         }
-        
+
         svg.appendChild(group);
     });
 }
@@ -1497,12 +1503,12 @@ function addSlideFromTree() {
     addSlide();
     const lastSlide = state.slides[state.slides.length - 2];
     const newSlide = state.slides[state.slides.length - 1];
-    
+
     if (lastSlide && lastSlide.treeX !== undefined) {
         newSlide.treeX = lastSlide.treeX + 300;
         newSlide.treeY = lastSlide.treeY;
     }
-    
+
     renderTreeNodes();
     drawConnections();
     saveProject();
@@ -1514,7 +1520,7 @@ function resetTreeLayout() {
         slide.treeX = 100 + (index % cols) * 300;
         slide.treeY = 100 + Math.floor(index / cols) * 200;
     });
-    
+
     renderTreeNodes();
     drawConnections();
     saveProject();
@@ -1542,25 +1548,25 @@ function buildPresentationPath() {
     if (!treeState.connections || treeState.connections.length === 0) {
         return state.slides.map((s, i) => i);
     }
-    
+
     const path = [];
     const visited = new Set();
     let currentSlideId = state.slides[0]?.id;
-    
+
     while (currentSlideId && !visited.has(currentSlideId)) {
         visited.add(currentSlideId);
         const slideIndex = state.slides.findIndex(s => s.id === currentSlideId);
         if (slideIndex !== -1) path.push(slideIndex);
-        
+
         const nextConnection = treeState.connections.find(c => c.from == currentSlideId);
         if (nextConnection) currentSlideId = nextConnection.to;
         else currentSlideId = null;
     }
-    
+
     state.slides.forEach((slide, index) => {
         if (!visited.has(slide.id)) path.push(index);
     });
-    
+
     return path.length > 0 ? path : state.slides.map((s, i) => i);
 }
 
@@ -1621,9 +1627,9 @@ function renderPresentationSlide(slideIndex = null){
 function navigateToSlideById(targetSlideId) {
     // Trouver l'index de la slide cible
     const targetSlideIndex = state.slides.findIndex(s => s.id === targetSlideId);
-    
+
     if (targetSlideIndex === -1) return;
-    
+
     // Afficher directement la slide cible sans modifier le chemin
     renderPresentationSlide(targetSlideIndex);
 }
@@ -1632,7 +1638,7 @@ function navigatePresentation(direction){
     // Utiliser l'index de la slide actuellement affichée
     const currentIndex = state.presentationCurrentSlideIndex;
     const newIndex = currentIndex + direction;
-    
+
     // Vérifier les limites
     if (newIndex >= 0 && newIndex < state.slides.length) {
         // Mettre à jour le step si on est dans un path
@@ -1644,7 +1650,7 @@ function navigatePresentation(direction){
         } else {
             state.presentationStep = newIndex;
         }
-        
+
         // Afficher directement la slide suivante/précédente
         state.presentationCurrentSlideIndex = newIndex;
         renderPresentationSlide(newIndex);
@@ -1667,8 +1673,7 @@ function exportPresentation(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    const projectName = localStorage.getItem('current_project_name') || 'presentation';
-    a.download = `${projectName}.json`;
+    a.download='presentation.json';
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -1736,3 +1741,6 @@ function handleImportFile(event) {
     // Reset l'input pour permettre de réimporter le même fichier
     event.target.value = '';
 }
+
+function goBackInPreview() {}
+function closeScenarioPreview() {}
