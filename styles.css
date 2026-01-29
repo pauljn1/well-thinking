@@ -354,6 +354,40 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 .property-row input[type="number"]:focus, .property-row input[type="text"]:focus { outline: none; border-color: var(--primary); }
 .property-row input[type="color"] { width: 40px; height: 32px; border-radius: var(--radius-full); }
 .property-row input[type="range"] { width: 100px; accent-color: var(--primary); }
+
+/* Color Picker Wrapper with Presets */
+.color-picker-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+.color-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+.color-preset {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.color-preset:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+.color-preset.active,
+.color-preset:focus {
+    border-color: var(--text-dark);
+    transform: scale(1.1);
+    outline: none;
+}
+
 .text-content-row { flex-direction: column; align-items: flex-start; gap: 8px; }
 .text-content-row textarea { width: 100%; padding: 12px; background: var(--background); border: 2px solid var(--border); border-radius: var(--radius-md); color: var(--text-dark); font-size: 13px; font-family: inherit; resize: vertical; min-height: 60px; }
 .text-content-row textarea:focus { outline: none; border-color: var(--primary); }
@@ -952,19 +986,49 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 }
 .tree-svg .connection-group {
     pointer-events: all;
+    cursor: pointer;
+}
+.tree-svg .connection-group:hover .scenario-connection-line {
+    stroke-width: 4 !important;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+}
+.tree-svg .connection-group:hover .connection-bg {
+    opacity: 0.25;
+    stroke-width: 12;
+}
+.tree-svg .connection-group:hover .connection-label-bg {
+    transform: scale(1.05);
 }
 .tree-svg .connection-edit-btn {
     pointer-events: all;
 }
 .tree-svg path {
-    transition: stroke-width 0.2s;
+    transition: stroke-width 0.2s, opacity 0.2s, filter 0.2s;
+}
+.tree-svg .connection-bg {
+    transition: opacity 0.2s, stroke-width 0.2s;
+}
+.tree-svg .connection-label-bg {
+    transition: transform 0.2s;
+    transform-origin: center;
+}
+.tree-svg .connection-label {
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .tree-svg path.simulating {
     animation: flowAnimation 1s ease-in-out infinite;
 }
+.tree-svg .navlink-connection {
+    animation: pulseConnection 2s ease-in-out infinite;
+}
 @keyframes flowAnimation {
     0%, 100% { stroke-opacity: 1; }
     50% { stroke-opacity: 0.4; }
+}
+@keyframes pulseConnection {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.7; }
 }
 
 .tree-nodes {
@@ -1603,29 +1667,28 @@ body { background: var(--background); color: var(--text-dark); overflow: hidden;
 /* Lignes de connexion animées */
 .scenario-connection-line {
     fill: none;
-    stroke: var(--primary);
+    /* La couleur stroke est définie dynamiquement via JavaScript */
     stroke-width: 3px;
     stroke-linecap: round;
     pointer-events: stroke;
     cursor: pointer;
-    animation: flowAnim 30s linear infinite;
+    transition: stroke-width 0.2s ease, filter 0.2s ease;
 }
 
 .scenario-connection-line:hover {
-    stroke: var(--primary-dark);
     stroke-width: 5px;
+    filter: brightness(0.85);
 }
 
 /* Connexions automatiques depuis les éléments Navigation (navlink) */
 .scenario-connection-line.navlink-connection {
-    stroke: #3498db;
+    /* La couleur est définie dynamiquement via JavaScript */
     stroke-dasharray: none;
-    animation: navlinkPulse 2s ease-in-out infinite;
 }
 
 .scenario-connection-line.navlink-connection:hover {
-    stroke: #2980b9;
     stroke-width: 5px;
+    filter: brightness(0.85);
 }
 
 @keyframes navlinkPulse {

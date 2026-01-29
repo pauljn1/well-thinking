@@ -247,6 +247,18 @@ function setupEventListeners(){
     document.getElementById('shapeRotation')?.addEventListener('input',updateShapeRotation);
     document.getElementById('deleteElement')?.addEventListener('click',deleteSelectedElement);
     
+    // Color presets pour navlink
+    document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.dataset.color;
+            document.getElementById('navLinkColor').value = color;
+            updateNavLinkColor();
+            // Mettre à jour la classe active
+            document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+    
     // Présentation & Export
     document.getElementById('presentBtn')?.addEventListener('click',startPresentation);
     document.getElementById('presExit')?.addEventListener('click',exitPresentation);
@@ -624,7 +636,12 @@ function updatePropertiesInputs(){
     if(state.selectedElement.type === 'navlink'){
         document.getElementById('targetSlideSelect').value = state.selectedElement.targetSlideId || '';
         document.getElementById('navLinkLabel').value = state.selectedElement.label || '';
-        document.getElementById('navLinkColor').value = state.selectedElement.color || '#cc6699';
+        const navColor = state.selectedElement.color || '#cc6699';
+        document.getElementById('navLinkColor').value = navColor;
+        // Mettre à jour le preset actif
+        document.querySelectorAll('#navLinkColorPresets .color-preset').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.color.toLowerCase() === navColor.toLowerCase());
+        });
     }
     if(state.selectedElement.type === 'shape'){
         document.getElementById('shapeColor').value = state.selectedElement.color || '#7c3aed';
@@ -699,6 +716,8 @@ function updateNavLinkLabel(){
 function updateNavLinkColor(){
     if(state.selectedElement?.type === 'navlink'){
         state.selectedElement.color = document.getElementById('navLinkColor').value;
+        // Mettre à jour la couleur de la connexion correspondante
+        syncConnectionsFromNavLinks();
         renderCurrentSlide();
         saveProject();
     }
@@ -1019,8 +1038,11 @@ function handleScenarioMouseMove(e) {
     // Déplacement d'une slide
     if (treeState.isDraggingSlide && treeState.currentDragSlide) {
         e.preventDefault();
-        const dx = e.clientX - treeState.startX;
-        const dy = e.clientY - treeState.startY;
+        
+        // Compenser le zoom : le mouvement écran doit être divisé par le zoom
+        const zoom = treeState.zoom || 1;
+        const dx = (e.clientX - treeState.startX) / zoom;
+        const dy = (e.clientY - treeState.startY) / zoom;
         
         let newX = treeState.initialLeft + dx;
         let newY = treeState.initialTop + dy;
@@ -1182,17 +1204,22 @@ function syncConnectionsFromNavLinks() {
             const toId = navlink.targetSlideId;
             
             // Vérifier si la connexion existe déjà
-            const exists = treeState.connections.some(c => 
-                c.from == fromId && c.to == toId
+            const existingIndex = treeState.connections.findIndex(c => 
+                c.from == fromId && c.to == toId && c.navLinkId == navlink.id
             );
             
-            // Créer la connexion si elle n'existe pas
-            if (!exists && fromId != toId) {
+            if (existingIndex !== -1) {
+                // Mettre à jour la couleur si elle a changé
+                treeState.connections[existingIndex].color = navlink.color || '#cc6699';
+                treeState.connections[existingIndex].label = navlink.label || '';
+            } else if (fromId != toId) {
+                // Créer la connexion si elle n'existe pas
                 const connection = {
                     id: `navlink-conn-${navlink.id}`,
                     from: fromId,
                     to: toId,
                     label: navlink.label || '',
+                    color: navlink.color || '#cc6699',  // Utiliser la couleur du navlink
                     fromNavLink: true,  // Marqueur pour identifier les connexions auto
                     navLinkId: navlink.id
                 };
@@ -1225,17 +1252,38 @@ function drawConnections() {
     svg.innerHTML = '';
     
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    defs.innerHTML = `
-        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#cc6699"/>
-        </marker>
-        <marker id="arrowhead-labeled" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#9b59b6"/>
-        </marker>
-        <marker id="arrowhead-navlink" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#3498db"/>
-        </marker>
+    
+    // Créer les filtres et styles de base
+    let defsContent = `
+        <filter id="arrow-shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+        </filter>
+        <filter id="arrow-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
     `;
+    
+    // Créer des marqueurs dynamiques pour chaque couleur de connexion
+    const usedColors = new Set();
+    treeState.connections.forEach(conn => {
+        const color = conn.color || '#cc6699';
+        usedColors.add(color);
+    });
+    
+    usedColors.forEach(color => {
+        const colorId = color.replace('#', '');
+        defsContent += `
+            <marker id="arrowhead-${colorId}" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 12 4 L 0 8 L 2 4 Z" fill="${color}"/>
+            </marker>
+        `;
+    });
+    
+    defs.innerHTML = defsContent;
     svg.appendChild(defs);
     
     treeState.connections.forEach((conn, index) => {
@@ -1249,49 +1297,191 @@ function drawConnections() {
         
         if (!fromCard || !toCard) return;
         
-        // Calculer les positions par rapport au treeCanvas
-        const tCanvas = document.getElementById('treeCanvas');
-        const tRect = tCanvas.getBoundingClientRect();
+        // Utiliser les positions stockées dans les données des slides (pas affectées par le zoom)
+        const zoom = treeState.zoom || 1;
         
-        const fromCardRect = fromCard.getBoundingClientRect();
-        const tCardRect = toCard.getBoundingClientRect();
+        // Obtenir les dimensions des cartes (sans zoom) - correspond au CSS
+        const cardWidth = 260;  // Largeur fixe des cartes scenario
+        const cardHeight = 150; // Hauteur minimale des cartes scenario
         
-        // Point de départ : bord droit de la carte source, au milieu verticalement
-        const x1 = fromCardRect.right - tRect.left + tCanvas.scrollLeft;
-        const y1 = fromCardRect.top + fromCardRect.height / 2 - tRect.top + tCanvas.scrollTop;
+        // Positions des cartes depuis les données (coordonnées dans l'espace non-zoomé)
+        const fromX = fromSlide.treeX;
+        const fromY = fromSlide.treeY;
+        const toX = toSlide.treeX;
+        const toY = toSlide.treeY;
         
-        // Point d'arrivée : bord gauche de la carte cible, au milieu verticalement
-        const x2 = tCardRect.left - tRect.left + tCanvas.scrollLeft;
-        const y2 = tCardRect.top + tCardRect.height / 2 - tRect.top + tCanvas.scrollTop;
+        // Calculer les centres des cartes
+        const fromCenterX = fromX + cardWidth / 2;
+        const fromCenterY = fromY + cardHeight / 2;
+        const toCenterX = toX + cardWidth / 2;
+        const toCenterY = toY + cardHeight / 2;
         
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const cp1x = x1 + Math.abs(x2 - x1) / 2;
-        const d = `M ${x1} ${y1} C ${cp1x} ${y1}, ${x2 - 50} ${y2}, ${x2} ${y2}`;
+        // Calculer la différence de position
+        const dx = toCenterX - fromCenterX;
+        const dy = toCenterY - fromCenterY;
         
-        path.setAttribute('d', d);
+        // Déterminer le meilleur côté pour la connexion
+        let x1, y1, x2, y2;
+        let exitSide, entrySide;
         
-        // Style différent pour les connexions créées automatiquement depuis navlink
-        if (conn.fromNavLink) {
-            path.setAttribute('stroke', '#3498db');  // Bleu pour les navlinks
-            path.setAttribute('stroke-width', '3');
-            path.setAttribute('marker-end', 'url(#arrowhead-navlink)');
-            path.classList.add('navlink-connection');
-        } else if (conn.label) {
-            path.setAttribute('stroke', '#9b59b6');
-            path.setAttribute('stroke-width', '3');
-            path.setAttribute('marker-end', 'url(#arrowhead-labeled)');
+        // Calculer les bords des cartes (dans l'espace non-zoomé)
+        const fromLeft = fromX;
+        const fromRight = fromX + cardWidth;
+        const fromTop = fromY;
+        const fromBottom = fromY + cardHeight;
+        
+        const toLeft = toX;
+        const toRight = toX + cardWidth;
+        const toTop = toY;
+        const toBottom = toY + cardHeight;
+        
+        // Déterminer la direction principale (horizontale ou verticale)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Connexion principalement horizontale
+            if (dx > 0) {
+                // La cible est à droite
+                x1 = fromRight;
+                y1 = fromCenterY;
+                x2 = toLeft;
+                y2 = toCenterY;
+                exitSide = 'right';
+                entrySide = 'left';
+            } else {
+                // La cible est à gauche
+                x1 = fromLeft;
+                y1 = fromCenterY;
+                x2 = toRight;
+                y2 = toCenterY;
+                exitSide = 'left';
+                entrySide = 'right';
+            }
         } else {
-            path.setAttribute('stroke', '#cc6699');
-            path.setAttribute('stroke-width', '3');
-            path.setAttribute('marker-end', 'url(#arrowhead)');
+            // Connexion principalement verticale
+            if (dy > 0) {
+                // La cible est en bas
+                x1 = fromCenterX;
+                y1 = fromBottom;
+                x2 = toCenterX;
+                y2 = toTop;
+                exitSide = 'bottom';
+                entrySide = 'top';
+            } else {
+                // La cible est en haut
+                x1 = fromCenterX;
+                y1 = fromTop;
+                x2 = toCenterX;
+                y2 = toBottom;
+                exitSide = 'top';
+                entrySide = 'bottom';
+            }
         }
         
+        // Couleur de la connexion
+        const connColor = conn.color || '#cc6699';
+        const colorId = connColor.replace('#', '');
+        
+        // Créer un groupe pour la connexion
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.classList.add('connection-group');
+        group.dataset.connectionId = conn.id;
+        
+        // Calculer les points de contrôle pour une courbe de Bézier élégante
+        let cp1x, cp1y, cp2x, cp2y;
+        const curveStrength = Math.min(Math.abs(dx), Math.abs(dy), 80) + 40;
+        
+        if (exitSide === 'right') {
+            cp1x = x1 + curveStrength;
+            cp1y = y1;
+        } else if (exitSide === 'left') {
+            cp1x = x1 - curveStrength;
+            cp1y = y1;
+        } else if (exitSide === 'bottom') {
+            cp1x = x1;
+            cp1y = y1 + curveStrength;
+        } else { // top
+            cp1x = x1;
+            cp1y = y1 - curveStrength;
+        }
+        
+        if (entrySide === 'left') {
+            cp2x = x2 - curveStrength;
+            cp2y = y2;
+        } else if (entrySide === 'right') {
+            cp2x = x2 + curveStrength;
+            cp2y = y2;
+        } else if (entrySide === 'top') {
+            cp2x = x2;
+            cp2y = y2 - curveStrength;
+        } else { // bottom
+            cp2x = x2;
+            cp2y = y2 + curveStrength;
+        }
+        
+        const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+        
+        // Créer une ligne d'arrière-plan pour l'effet de glow
+        const pathBg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathBg.setAttribute('d', d);
+        pathBg.setAttribute('stroke', connColor);
+        pathBg.setAttribute('stroke-width', '10');
+        pathBg.setAttribute('fill', 'none');
+        pathBg.setAttribute('stroke-linecap', 'round');
+        pathBg.setAttribute('opacity', '0.15');
+        pathBg.classList.add('connection-bg');
+        group.appendChild(pathBg);
+        
+        // Créer la ligne principale avec la couleur complète
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', connColor);
+        path.setAttribute('stroke-width', '3');
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('marker-end', `url(#arrowhead-${colorId})`);
         path.classList.add('scenario-connection-line');
-        path.dataset.connectionId = conn.id;
         
-        svg.appendChild(path);
+        if (conn.fromNavLink) {
+            path.classList.add('navlink-connection');
+        }
+        
+        group.appendChild(path);
+        
+        // Ajouter un label si présent
+        if (conn.label) {
+            // Calculer le point milieu de la courbe de Bézier
+            const t = 0.5;
+            const midX = Math.pow(1-t,3)*x1 + 3*Math.pow(1-t,2)*t*cp1x + 3*(1-t)*Math.pow(t,2)*cp2x + Math.pow(t,3)*x2;
+            const midY = Math.pow(1-t,3)*y1 + 3*Math.pow(1-t,2)*t*cp1y + 3*(1-t)*Math.pow(t,2)*cp2y + Math.pow(t,3)*y2 - 12;
+            
+            // Fond du label
+            const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            const textLength = conn.label.length * 7 + 16;
+            labelBg.setAttribute('x', midX - textLength / 2);
+            labelBg.setAttribute('y', midY - 10);
+            labelBg.setAttribute('width', textLength);
+            labelBg.setAttribute('height', '20');
+            labelBg.setAttribute('rx', '10');
+            labelBg.setAttribute('ry', '10');
+            labelBg.setAttribute('fill', connColor);
+            labelBg.setAttribute('opacity', '0.9');
+            labelBg.classList.add('connection-label-bg');
+            group.appendChild(labelBg);
+            
+            // Texte du label
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', midX);
+            label.setAttribute('y', midY + 4);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('fill', 'white');
+            label.setAttribute('font-size', '11');
+            label.setAttribute('font-weight', '600');
+            label.setAttribute('font-family', 'Inter, Segoe UI, sans-serif');
+            label.textContent = conn.label;
+            label.classList.add('connection-label');
+            group.appendChild(label);
+        }
+        
+        svg.appendChild(group);
     });
 }
 
