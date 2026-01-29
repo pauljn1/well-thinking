@@ -401,7 +401,7 @@ function updateSlidesList(){
         thumbnail.className=`slide-thumbnail ${index===state.currentSlideIndex?'active':''}`;
         thumbnail.innerHTML=`
             <div class="slide-thumbnail-content" style="background:${slide.backgroundColor};width:500%;height:500%;transform:scale(0.2);transform-origin:top left;">
-                ${renderSlideContent(slide,true)}
+                ${renderSlideContent(slide, { isThumbnail: true })}
             </div>
             <span class="slide-number">${index+1}</span>
             <button class="slide-delete-btn" title="Supprimer"><i class="fas fa-times"></i></button>
@@ -423,25 +423,37 @@ function renderCurrentSlide(){
     slideCanvas.querySelectorAll('.slide-element').forEach(elem=>{ setupElementEvents(elem); });
 }
 
-function renderSlideContent(slide,isThumbnail=false){
-    if(!slide || !slide.elements) return '';
-    return slide.elements.map(elem=>{
-        const selected=!isThumbnail&&state.selectedElement?.id===elem.id?'selected':'';
-        const style=`left:${elem.x}px;top:${elem.y}px;width:${elem.width}px;height:${elem.height}px;`;
-        let resizeHandles = (!isThumbnail&&selected) ? `<div class="resize-handle nw"></div><div class="resize-handle ne"></div><div class="resize-handle sw"></div><div class="resize-handle se"></div>` : '';
+function renderSlideContent(slide, options = {}) {
+    const { isThumbnail = false, scale = 1 } = options;
+    if (!slide || !slide.elements) return '';
+    
+    return slide.elements.map(elem => {
+        const x = elem.x * scale;
+        const y = elem.y * scale;
+        const width = elem.width * scale;
+        const height = elem.height * scale;
+        const style = `left:${x}px;top:${y}px;width:${width}px;height:${height}px;`;
         
-        switch(elem.type){
-            case'text':
-                return`<div class="slide-element text-element ${selected}" data-id="${elem.id}" style="${style}font-family:${elem.fontFamily};font-size:${elem.fontSize}px;color:${elem.color};font-weight:${elem.bold?'bold':'normal'};font-style:${elem.italic?'italic':'normal'};text-decoration:${elem.underline?'underline':'none'};text-align:${elem.textAlign||'left'};">${elem.content}${resizeHandles}</div>`;
-            case'image':
-                return`<div class="slide-element image-element ${selected}" data-id="${elem.id}" style="${style}"><img src="${elem.src}" alt="Image" style="width:100%;height:100%;object-fit:contain;">${resizeHandles}</div>`;
-            case'shape':
+        const selected = !isThumbnail && state.selectedElement?.id === elem.id ? 'selected' : '';
+        const resizeHandles = (!isThumbnail && selected) ? `<div class="resize-handle nw"></div><div class="resize-handle ne"></div><div class="resize-handle sw"></div><div class="resize-handle se"></div>` : '';
+        
+        switch(elem.type) {
+            case 'text': {
+                const fontSize = (elem.fontSize || 24) * scale;
+                return `<div class="slide-element text-element ${selected}" data-id="${elem.id}" style="${style}font-family:${elem.fontFamily};font-size:${fontSize}px;color:${elem.color};font-weight:${elem.bold?'bold':'normal'};font-style:${elem.italic?'italic':'normal'};text-decoration:${elem.underline?'underline':'none'};text-align:${elem.textAlign||'left'};">${elem.content}${resizeHandles}</div>`;
+            }
+            case 'image':
+                return `<div class="slide-element image-element ${selected}" data-id="${elem.id}" style="${style}"><img src="${elem.src}" alt="Image" style="width:100%;height:100%;object-fit:contain;">${resizeHandles}</div>`;
+            case 'shape': {
                 const rotation = elem.rotation || 0;
-                return`<div class="slide-element shape-element ${selected}" data-id="${elem.id}" style="${style}transform:rotate(${rotation}deg);">${renderShape(elem.shape,elem.color||'#7c3aed')}${resizeHandles}</div>`;
-            case'navlink':
+                return `<div class="slide-element shape-element ${selected}" data-id="${elem.id}" style="${style}transform:rotate(${rotation}deg);">${renderShape(elem.shape, elem.color || '#7c3aed')}${resizeHandles}</div>`;
+            }
+            case 'navlink': {
                 const targetIndex = state.slides.findIndex(s => s.id === elem.targetSlideId);
                 const targetLabel = targetIndex !== -1 ? `Slide ${targetIndex + 1}` : 'Non défini';
-                return`<div class="slide-element navlink-element ${selected}" data-id="${elem.id}" style="${style}background-color:${elem.color};display:flex;align-items:center;justify-content:center;color:white;font-size:14px;box-shadow:0 4px 15px rgba(0,0,0,0.1);"><i class="fas fa-arrow-right" style="margin-right:5px"></i>${elem.label||targetLabel}${resizeHandles}</div>`;
+                const navFontSize = 14 * scale;
+                return `<div class="slide-element navlink-element ${selected}" data-id="${elem.id}" data-target-slide-id="${elem.targetSlideId}" style="${style}background-color:${elem.color};display:flex;align-items:center;justify-content:center;color:white;font-size:${navFontSize}px;box-shadow:0 4px 15px rgba(0,0,0,0.1);border-radius:8px;transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)';"><i class="fas fa-arrow-right" style="margin-right:5px"></i>${elem.label || targetLabel}${resizeHandles}</div>`;
+            }
         }
         return '';
     }).join('');
@@ -1564,65 +1576,49 @@ function exitPresentation(){
     state.presentationCurrentSlideIndex = 0;
 }
 
-function renderPresentationSlide(){
-    const slideIndex = state.presentationPath ? state.presentationPath[state.presentationStep] : state.presentationStep;
+function renderPresentationSlide(slideIndex = null){
+    // Si pas d'index fourni, calculer depuis le chemin de présentation
+    if (slideIndex === null) {
+        slideIndex = state.presentationPath ? state.presentationPath[state.presentationStep] : state.presentationStep;
+    }
+
     const slide = state.slides[slideIndex];
     if (!slide) return;
-    
-    // Mettre à jour l'index de la slide actuellement affichée
+
+    // Mettre à jour l'état
     state.presentationCurrentSlideIndex = slideIndex;
-    
+
+    // Si navigation par chemin, mettre à jour le step correspondant
+    if (state.presentationPath) {
+        const stepInPath = state.presentationPath.indexOf(slideIndex);
+        if (stepInPath !== -1) state.presentationStep = stepInPath;
+    }
+
     const container = document.getElementById('presentationSlide');
-    container.innerHTML = ''; 
-    
+    container.innerHTML = '';
+
     const scaleX = window.innerWidth / 960;
     const scaleY = (window.innerHeight - 60) / 540;
     const scale = Math.min(scaleX, scaleY);
-    
+
     let html = `<div class="presentation-slide-content" style="background:${slide.backgroundColor};width:${960*scale}px;height:${540*scale}px;">`;
-    html += renderPresentationContent(slide, scale).replace(/<div class="resize-handle[^>]*><\/div>/g, ''); 
+    html += renderSlideContent(slide, { isThumbnail: true, scale: scale });
     html += '</div>';
-    
+
     container.innerHTML = html;
-    
-    // Ajouter les écouteurs de clic sur les navlinks
+
+    // Event listeners pour les navlinks cliquables
     container.querySelectorAll('.navlink-element').forEach(navElement => {
         navElement.style.cursor = 'pointer';
         navElement.addEventListener('click', (e) => {
             e.stopPropagation();
             const targetSlideId = parseInt(navElement.dataset.targetSlideId);
-            if (targetSlideId) {
-                navigateToSlideById(targetSlideId);
-            }
+            if (targetSlideId) navigateToSlideById(targetSlideId);
         });
     });
-    
-    document.getElementById('presCounter').textContent = (slideIndex + 1) + ' / ' + state.slides.length;
-}
 
-// Rendu spécifique pour le mode présentation avec support des navlinks cliquables
-function renderPresentationContent(slide, scale = 1) {
-    if (!slide.elements || !Array.isArray(slide.elements)) return '';
-    
-    return slide.elements.map(elem => {
-        const style = `position:absolute;left:${elem.x * scale}px;top:${elem.y * scale}px;width:${elem.width * scale}px;height:${elem.height * scale}px;`;
-        
-        switch(elem.type) {
-            case 'text':
-                const scaledFontSize = (elem.fontSize || 24) * scale;
-                return `<div class="slide-element text-element" data-id="${elem.id}" style="${style}font-family:${elem.fontFamily};font-size:${scaledFontSize}px;color:${elem.color};font-weight:${elem.bold?'bold':'normal'};font-style:${elem.italic?'italic':'normal'};text-decoration:${elem.underline?'underline':'none'};text-align:${elem.textAlign||'left'};">${elem.content}</div>`;
-            case 'image':
-                return `<div class="slide-element image-element" data-id="${elem.id}" style="${style}"><img src="${elem.src}" alt="Image" style="width:100%;height:100%;object-fit:contain;"></div>`;
-            case 'shape':
-                return `<div class="slide-element shape-element" data-id="${elem.id}" style="${style}">${renderShape(elem.shape, elem.color || '#7c3aed')}</div>`;
-            case 'navlink':
-                const targetIndex = state.slides.findIndex(s => s.id === elem.targetSlideId);
-                const targetLabel = targetIndex !== -1 ? `Slide ${targetIndex + 1}` : 'Non défini';
-                const scaledNavFontSize = 14 * scale;
-                return `<div class="slide-element navlink-element" data-id="${elem.id}" data-target-slide-id="${elem.targetSlideId}" style="${style}background-color:${elem.color};display:flex;align-items:center;justify-content:center;color:white;font-size:${scaledNavFontSize}px;box-shadow:0 4px 15px rgba(0,0,0,0.1);border-radius:8px;transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)';"><i class="fas fa-arrow-right" style="margin-right:5px"></i>${elem.label || targetLabel}</div>`;
-        }
-        return '';
-    }).join('');
+    // Mettre à jour le compteur
+    document.getElementById('presCounter').textContent = `${slideIndex + 1} / ${state.slides.length}`;
 }
 
 // Naviguer vers une slide spécifique par son ID (téléportation directe)
@@ -1633,55 +1629,7 @@ function navigateToSlideById(targetSlideId) {
     if (targetSlideIndex === -1) return;
     
     // Afficher directement la slide cible sans modifier le chemin
-    renderPresentationSlideByIndex(targetSlideIndex);
-}
-
-// Afficher une slide spécifique par son index (pour la navigation par navlink)
-function renderPresentationSlideByIndex(slideIndex) {
-    const slide = state.slides[slideIndex];
-    if (!slide) return;
-    
-    // Mettre à jour l'index de la slide actuellement affichée
-    state.presentationCurrentSlideIndex = slideIndex;
-    
-    // Mettre à jour le step pour refléter la position actuelle
-    // On cherche si cette slide est dans le path, sinon on garde l'index direct
-    if (state.presentationPath) {
-        const stepInPath = state.presentationPath.indexOf(slideIndex);
-        if (stepInPath !== -1) {
-            state.presentationStep = stepInPath;
-        }
-    }
-    
-    const container = document.getElementById('presentationSlide');
-    container.innerHTML = ''; 
-    
-    const scaleX = window.innerWidth / 960;
-    const scaleY = (window.innerHeight - 60) / 540;
-    const scale = Math.min(scaleX, scaleY);
-    
-    let html = `<div class="presentation-slide-content" style="background:${slide.backgroundColor};width:${960*scale}px;height:${540*scale}px;">`;
-    html += renderPresentationContent(slide, scale).replace(/<div class="resize-handle[^>]*><\/div>/g, ''); 
-    html += '</div>';
-    
-    container.innerHTML = html;
-    
-    // Ajouter les écouteurs de clic sur les navlinks
-    container.querySelectorAll('.navlink-element').forEach(navElement => {
-        navElement.style.cursor = 'pointer';
-        navElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const targetSlideId = parseInt(navElement.dataset.targetSlideId);
-            if (targetSlideId) {
-                navigateToSlideById(targetSlideId);
-            }
-        });
-    });
-    
-    // Mettre à jour le compteur avec la position réelle
-    const displayIndex = slideIndex + 1;
-    const total = state.slides.length;
-    document.getElementById('presCounter').textContent = `${displayIndex} / ${total}`;
+    renderPresentationSlide(targetSlideIndex);
 }
 
 function navigatePresentation(direction){
@@ -1703,7 +1651,7 @@ function navigatePresentation(direction){
         
         // Afficher directement la slide suivante/précédente
         state.presentationCurrentSlideIndex = newIndex;
-        renderPresentationSlideByIndex(newIndex);
+        renderPresentationSlide(newIndex);
     }
 }
 
