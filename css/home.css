@@ -195,7 +195,7 @@ body {
     gap: 6px;
 }
 
-.btn-open { 
+.btn-open, .btn-confirm { 
     background: var(--primary); 
     color: white; 
 }
@@ -550,4 +550,74 @@ body {
         flex-direction: column;
         gap: 8px;
     }
+    
+    .footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+    
+    .footer-left,
+    .footer-right {
+        justify-content: center;
+    }
+    
+    .footer-center {
+        gap: 15px;
+    }
+    
+    .footer-center a {
+        font-size: 13px;
+    }
+}
+
+/* =============================================
+   FOOTER
+============================================= */
+.footer {
+    background: linear-gradient(135deg, var(--primary), #e58bb6);
+    padding: 1.2rem 2.5rem;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-left strong {
+    font-weight: 600;
+}
+
+.footer-muted {
+    opacity: 0.75;
+}
+
+.footer-center {
+    display: flex;
+    gap: 25px;
+}
+
+.footer-center a {
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.footer-center a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

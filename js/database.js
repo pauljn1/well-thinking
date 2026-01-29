@@ -96,12 +96,29 @@ export async function recupererMesProjets() {
     querySnapshot.forEach((doc) => {
         // On récupère les données
         const data = doc.data();
+        const contenu = data.contenu || {};
+        
+        // Les slides sont dans contenu.slides
+        let slides = contenu.slides || [];
+        
+        // Firebase peut convertir les arrays en objets, on reconvertit si besoin
+        if (slides && !Array.isArray(slides)) {
+            slides = Object.values(slides);
+        }
+        
+        // Pareil pour les elements de chaque slide
+        slides = slides.map(slide => {
+            if (slide && slide.elements && !Array.isArray(slide.elements)) {
+                slide.elements = Object.values(slide.elements);
+            }
+            return slide;
+        });
+        
         projets.push({ 
             firebaseId: doc.id, 
             name: data.nom,
             updatedAt: data.updatedAt || new Date().toISOString(),
-            // On récupère les slides pour l'aperçu, ou un tableau vide si erreur
-            slides: data.contenu && data.contenu.nodes ? [] : (data.contenu || []) // Adaptation selon ton format JSON
+            slides: slides
         });
     });
     return projets;
@@ -110,4 +127,36 @@ export async function recupererMesProjets() {
 // Supprime un projet
 export async function supprimerProjetCloud(firebaseId) {
      await deleteDoc(doc(db, "projets", firebaseId));
+}
+
+// Renomme un projet (supprime l'ancien et crée un nouveau car l'ID contient le nom)
+export async function renommerProjet(ancienFirebaseId, nouveauNom) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Tu dois être connecté !");
+    
+    // Récupérer l'ancien projet
+    const ancienDoc = await getDoc(doc(db, "projets", ancienFirebaseId));
+    if (!ancienDoc.exists()) throw new Error("Projet introuvable");
+    
+    const data = ancienDoc.data();
+    
+    // Créer le nouveau document avec le nouveau nom
+    const nouveauDocId = user.uid + "_" + nouveauNom.replace(/\s/g, '');
+    
+    // Mettre à jour le nom dans le contenu aussi
+    const contenu = data.contenu || {};
+    contenu.name = nouveauNom;
+    
+    await setDoc(doc(db, "projets", nouveauDocId), {
+        uid: user.uid,
+        auteur: user.email,
+        nom: nouveauNom,
+        contenu: contenu,
+        updatedAt: new Date().toISOString()
+    });
+    
+    // Supprimer l'ancien document
+    await deleteDoc(doc(db, "projets", ancienFirebaseId));
+    
+    return nouveauNom;
 }
