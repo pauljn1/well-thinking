@@ -1,3 +1,4 @@
+
 # Analyse du fichier js/script.js
 
 Ce document présente un découpage des grandes parties de `js/script.js` (≈1732 lignes) et un résumé fonctionnel de chaque section.
