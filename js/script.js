@@ -664,24 +664,24 @@ function updatePropertiesInputs(){ //garantit que l’interface utilisateur refl
     }
 }
 
-function populateTargetSlideSelect(){
+function populateTargetSlideSelect(){ //génère la liste des slides cibles possibles pour un élément de type navlink.
     const select = document.getElementById('targetSlideSelect');
-    if(!select) return;
-    select.innerHTML = '';
-    state.slides.forEach((slide, index) => {
-        if(index !== state.currentSlideIndex){
-            const option = document.createElement('option');
-            option.value = slide.id;
-            option.textContent = `Slide ${index + 1} - ${getSlideTitle(slide)}`;
-            select.appendChild(option);
+    if(!select) return; // Sécurité
+    select.innerHTML = ''; // Réinitialiser les options
+    state.slides.forEach((slide, index) => { // Parcourir toutes les slides
+        if(index !== state.currentSlideIndex){ // Exclure la slide actuelle
+            const option = document.createElement('option'); //Créer une nouvelle option
+            option.value = slide.id; //Chaque slide valide génère une option
+            option.textContent = `Slide ${index + 1} - ${getSlideTitle(slide)}`; // Affichage du numéro et du titre
+            select.appendChild(option); //On ajoute chaque option au menu déroulant.
         }
     });
 }
 
 function updateElementPosition(){
     if(!state.selectedElement)return;
-    state.selectedElement.x=parseInt(document.getElementById('elemX').value)||0;
-    state.selectedElement.y=parseInt(document.getElementById('elemY').value)||0;
+    state.selectedElement.x=parseInt(document.getElementById('elemX').value)||0; // Valeur par défaut 0
+    state.selectedElement.y=parseInt(document.getElementById('elemY').value)||0; 
     renderCurrentSlide();
     saveProject();
 }
@@ -701,18 +701,18 @@ function updateElementTextContent(){
     saveProject();
 }
 
-function updateNavLinkTarget(){
-    if(state.selectedElement?.type === 'navlink'){
-        const currentSlideId = state.slides[state.currentSlideIndex].id;
-        const oldTargetId = state.selectedElement.targetSlideId;
-        const newTargetId = parseInt(document.getElementById('targetSlideSelect').value);
+function updateNavLinkTarget(){  
+    if(state.selectedElement?.type === 'navlink'){ // Vérifie si l'élément sélectionné est un navlink
+        const currentSlideId = state.slides[state.currentSlideIndex].id; // ID de la slide actuelle
+        const oldTargetId = state.selectedElement.targetSlideId; // ID de la cible actuelle
+        const newTargetId = parseInt(document.getElementById('targetSlideSelect').value); // Nouvelle cible sélectionnée
 
         // Supprimer l'ancienne connexion si elle existe
         if(oldTargetId) {
             removeNavLinkConnection(currentSlideId, oldTargetId);
         }
 
-        state.selectedElement.targetSlideId = newTargetId;
+        state.selectedElement.targetSlideId = newTargetId; // Mettre à jour la cible du navlink
 
         // Créer la nouvelle connexion automatiquement
         syncConnectionsFromNavLinks();
@@ -756,18 +756,18 @@ function updateShapeRotation(){
 }
 
 function deleteSelectedElement(){
-    if(!state.selectedElement)return;
-    saveToHistory();
-    const slide=state.slides[state.currentSlideIndex];
-    const index=slide.elements.findIndex(e=>e.id===state.selectedElement.id);
-    if(index!==-1){
-        // Si c'est un navlink, supprimer la connexion correspondante
+    if(!state.selectedElement)return; // Sécurité
+    saveToHistory(); // Sauvegarder l'état avant la suppression
+    const slide=state.slides[state.currentSlideIndex]; //travaille uniquement sur la slide active.
+    const index=slide.elements.findIndex(e=>e.id===state.selectedElement.id); // Trouver l'index de l'élément sélectionné
+    if(index!==-1){ //s’assure que l’élément est bien présent avant de le supprimer.
+        // Si c'est un navlink, supprimer la connexion correspondante 
         if(state.selectedElement.type === 'navlink' && state.selectedElement.targetSlideId) {
-            removeNavLinkConnection(slide.id, state.selectedElement.targetSlideId);
+            removeNavLinkConnection(slide.id, state.selectedElement.targetSlideId); // Suppression de la connexion
         }
 
-        slide.elements.splice(index,1);
-        state.selectedElement=null;
+        slide.elements.splice(index,1); // Supprimer l'élément
+        state.selectedElement=null; //Nettoyage de l’état de sélection
         renderCurrentSlide();
         hideElementProperties();
         saveProject();
@@ -811,19 +811,19 @@ function setSlideBgColor(color){
 }
 
 // Drag & Drop / Resize
-function setupElementEvents(elem){
+function setupElementEvents(elem){ //agit comme un point d’entrée unique pour toutes les interactions utilisateur sur un élément.
     elem.addEventListener('mousedown',e=>{
-        if(e.target.classList.contains('resize-handle')){
+        if(e.target.classList.contains('resize-handle')){ //Si le clic vient d’une poignée → resize
             startResize(e);
-        } else if(!state.isEditing) {
+        } else if(!state.isEditing) { //Le drag est autorisé uniquement si on n’est pas en mode édition
             startDrag(e);
         }
     });
 
-    elem.addEventListener('dblclick',e=>{
-        if(elem.classList.contains('text-element')){
-            e.stopPropagation();
-            state.isEditing = true;
+    elem.addEventListener('dblclick',e=>{ //Gestion du double-clic pour éditer le texte
+        if(elem.classList.contains('text-element')){ //Vérifie que l’élément est bien de type texte
+            e.stopPropagation(); //Empêche la propagation pour éviter les conflits avec d’autres gestionnaires d’événements
+            state.isEditing = true; //Activation du mode édition
             elem.setAttribute('contenteditable', 'true');
             elem.focus();
         }
